@@ -1,0 +1,3687 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#0a0e1a">
+<title>WebLinux Pro</title>
+<style>
+:root{
+  --accent:#4f8cff;--text:#e9eefb;--muted:#8b96b0;--panel:#151a28;
+  --panel2:#1a2030;--head:#222a3d;--border:rgba(255,255,255,.09);
+  --term-bg:#0a0e1a;--term-fg:#d4dcec;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;background:#05070d;color:var(--text);
+  font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  overscroll-behavior:none;touch-action:manipulation;user-select:none;-webkit-user-select:none}
+input,textarea,pre,.term-out{user-select:text;-webkit-user-select:text}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,.16);border-radius:8px}
+::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,.28)}
+
+/* ---------- BOOT ---------- */
+#boot{position:fixed;inset:0;background:#05070d;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:16px;z-index:9999;transition:opacity .6s}
+#boot.hide{opacity:0;pointer-events:none}
+.boot-logo{font-size:72px;animation:float 2.4s ease-in-out infinite;filter:drop-shadow(0 8px 24px rgba(79,140,255,.5))}
+@keyframes float{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-10px) rotate(-3deg)}}
+.boot-name{font-size:26px;letter-spacing:6px;font-weight:300;color:#cfe0ff;text-shadow:0 0 30px rgba(79,140,255,.7)}
+.boot-bar{width:220px;height:3px;background:rgba(255,255,255,.1);border-radius:3px;overflow:hidden}
+.boot-bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#4f8cff,#a855f7);animation:load 2.2s ease forwards}
+@keyframes load{to{width:100%}}
+.boot-txt{font-size:12px;color:var(--muted);font-family:ui-monospace,monospace}
+
+/* ---------- DESKTOP ---------- */
+#desktop{position:fixed;inset:0;overflow:hidden;display:none}
+#desktop.on{display:block}
+#wall{position:absolute;inset:0;transition:background .5s}
+#icons{position:absolute;top:10px;left:8px;right:8px;bottom:70px;display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:4px;align-content:start;
+  overflow-y:auto;padding:4px}
+.dicon{display:flex;flex-direction:column;align-items:center;gap:6px;padding:9px 4px;
+  border-radius:11px;text-align:center;transition:.12s}
+.dicon:active{background:rgba(255,255,255,.16);transform:scale(.94)}
+.dicon .di{font-size:32px;filter:drop-shadow(0 3px 7px rgba(0,0,0,.6))}
+.dicon .dn{font-size:10.5px;line-height:1.2;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.95);
+  word-break:break-word;max-width:74px}
+
+/* ---------- WINDOWS ---------- */
+#wins{position:absolute;inset:0;pointer-events:none}
+.win{position:absolute;background:var(--panel2);border:1px solid var(--border);
+  border-radius:13px;overflow:hidden;display:flex;flex-direction:column;pointer-events:auto;
+  box-shadow:0 20px 60px rgba(0,0,0,.7),0 0 0 1px rgba(255,255,255,.04);
+  animation:pop .18s cubic-bezier(.2,1,.3,1)}
+@keyframes pop{from{transform:scale(.94);opacity:0}to{transform:scale(1);opacity:1}}
+.win.min{display:none}
+.win.max{border-radius:0}
+.win-head{height:42px;flex:0 0 42px;background:var(--head);display:flex;align-items:center;
+  justify-content:space-between;padding:0 6px 0 14px;touch-action:none;
+  border-bottom:1px solid var(--border)}
+.win-title{display:flex;align-items:center;gap:9px;font-size:13px;font-weight:600;
+  pointer-events:none;white-space:nowrap;overflow:hidden;flex:1;min-width:0}
+.win-title span:last-child{overflow:hidden;text-overflow:ellipsis}
+.win-btns{display:flex;gap:3px;flex:0 0 auto}
+.wb{width:32px;height:30px;border-radius:8px;font-size:13px;color:var(--muted);
+  display:grid;place-items:center;transition:.12s}
+.wb:hover{background:rgba(255,255,255,.1);color:#fff}
+.wb.close:hover{background:#e5484d;color:#fff}
+.win-body{flex:1;overflow:hidden;position:relative;display:flex;flex-direction:column}
+
+/* ---------- TASKBAR ---------- */
+#taskbar{position:absolute;left:0;right:0;bottom:0;display:flex;align-items:center;gap:8px;
+  padding:6px 8px calc(6px + env(safe-area-inset-bottom,0px));min-height:56px;
+  background:rgba(14,18,28,.88);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border-top:1px solid var(--border);z-index:50}
+#startBtn{width:44px;height:44px;flex:0 0 44px;border-radius:12px;font-size:22px;
+  background:rgba(255,255,255,.08);display:grid;place-items:center;transition:.15s;color:#fff}
+#startBtn.on{background:var(--accent);transform:scale(.95);box-shadow:0 0 20px rgba(79,140,255,.5)}
+#tasks{flex:1;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;min-width:0}
+#tasks::-webkit-scrollbar{display:none}
+.tk{display:flex;align-items:center;gap:6px;padding:0 12px;height:40px;border-radius:10px;
+  background:rgba(255,255,255,.06);font-size:11.5px;white-space:nowrap;max-width:140px;
+  overflow:hidden;flex:0 0 auto;color:#dfe7f7}
+.tk.on{background:rgba(79,140,255,.28);border:1px solid rgba(79,140,255,.5)}
+.tk span:last-child{overflow:hidden;text-overflow:ellipsis}
+#clock{display:flex;flex-direction:column;align-items:flex-end;font-size:11px;
+  line-height:1.35;padding-right:8px;color:#dfe7f7;flex:0 0 auto;font-variant-numeric:tabular-nums}
+#clock b{font-weight:600;font-size:13px}
+
+/* ---------- START MENU ---------- */
+#startMenu{position:absolute;left:8px;right:8px;bottom:calc(64px + env(safe-area-inset-bottom,0px));
+  max-height:75%;background:rgba(14,18,28,.94);backdrop-filter:blur(24px);
+  border:1px solid var(--border);border-radius:16px;padding:14px;display:none;
+  flex-direction:column;gap:12px;z-index:60;box-shadow:0 -12px 50px rgba(0,0,0,.7);
+  animation:up .18s cubic-bezier(.2,1,.3,1)}
+#startMenu.on{display:flex}
+@keyframes up{from{transform:translateY(18px);opacity:0}to{transform:translateY(0);opacity:1}}
+.sm-head{display:flex;align-items:center;gap:12px;padding:0 4px}
+.sm-avatar{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#4f8cff,#a855f7);
+  display:grid;place-items:center;font-weight:700;font-size:17px;color:#fff;flex:0 0 auto}
+.sm-user{font-size:14px;font-weight:600}
+.sm-host{font-size:10.5px;color:var(--muted);font-family:ui-monospace,monospace}
+#smSearch{width:100%;padding:11px 13px;border-radius:11px;background:rgba(255,255,255,.07);
+  border:1px solid var(--border);color:#fff;font-size:13px;outline:none;transition:.15s}
+#smSearch:focus{border-color:var(--accent);background:rgba(255,255,255,.1)}
+#smList{overflow-y:auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));
+  gap:6px;padding:2px;flex:1;min-height:0}
+.sm-app{display:flex;flex-direction:column;align-items:center;gap:6px;padding:11px 4px;
+  border-radius:12px;font-size:10.5px;text-align:center;transition:.12s}
+.sm-app:active{background:rgba(255,255,255,.13);transform:scale(.95)}
+.sm-app .si{font-size:27px}
+.sm-foot{display:flex;gap:8px;border-top:1px solid var(--border);padding-top:12px}
+.sm-foot button{flex:1;padding:11px;border-radius:11px;background:rgba(255,255,255,.07);
+  font-size:12px;transition:.12s}
+.sm-foot button:active{background:rgba(255,255,255,.15)}
+
+/* ---------- TOAST ---------- */
+#toast{position:absolute;left:50%;bottom:calc(74px + env(safe-area-inset-bottom,0px));
+  transform:translateX(-50%) translateY(20px);background:rgba(10,14,24,.97);
+  border:1px solid var(--border);padding:11px 18px;border-radius:12px;font-size:12.5px;
+  opacity:0;pointer-events:none;transition:.28s cubic-bezier(.2,1,.3,1);z-index:300;
+  max-width:88%;text-align:center;box-shadow:0 10px 34px rgba(0,0,0,.7);backdrop-filter:blur(12px)}
+#toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+#toast.err{border-color:rgba(229,72,77,.5);background:rgba(60,15,20,.95)}
+#toast.ok{border-color:rgba(34,197,94,.5);background:rgba(15,50,25,.95)}
+
+/* ---------- TERMINAL ---------- */
+.term-wrap{display:flex;flex-direction:column;height:100%;background:var(--term-bg);
+  font-family:ui-monospace,'SF Mono','Cascadia Code','Fira Code','Courier New',monospace;
+  font-size:12.5px;line-height:1.5;color:var(--term-fg)}
+.term-toolbar{display:flex;gap:6px;padding:6px 8px;background:#0f1420;border-bottom:1px solid var(--border);
+  overflow-x:auto;scrollbar-width:none;flex:0 0 auto}
+.term-toolbar::-webkit-scrollbar{display:none}
+.term-toolbar button{padding:5px 10px;border-radius:7px;background:rgba(255,255,255,.06);
+  font-size:11px;color:#9aa4bb;white-space:nowrap;font-family:ui-monospace,monospace}
+.term-toolbar button:active{background:var(--accent);color:#fff}
+.term-scroll{flex:1;overflow-y:auto;padding:10px 12px;scroll-behavior:smooth}
+.term-out{white-space:pre-wrap;word-break:break-word;margin:0;font-family:inherit}
+.term-line{display:flex;flex-wrap:wrap;align-items:baseline;min-height:1.5em}
+.term-prompt{white-space:pre;flex:0 0 auto}
+.term-in{flex:1;min-width:60px;background:none;border:none;outline:none;
+  color:var(--term-fg);font-family:inherit;font-size:inherit;line-height:inherit;
+  caret-color:var(--accent);padding:0}
+.term-cursor{display:inline-block;width:8px;height:15px;background:var(--accent);
+  animation:blink 1.1s steps(2) infinite;vertical-align:text-bottom;margin-left:1px}
+@keyframes blink{0%,50%{opacity:1}51%,100%{opacity:0}}
+.ansi-bold{font-weight:700}
+.ansi-dim{opacity:.65}
+.ansi-italic{font-style:italic}
+.ansi-underline{text-decoration:underline}
+.ansi-black{color:#3d4455}.ansi-red{color:#ff6b6b}.ansi-green{color:#7ee787}
+.ansi-yellow{color:#ffd54f}.ansi-blue{color:#6aa6ff}.ansi-magenta{color:#d183ff}
+.ansi-cyan{color:#5be7ff}.ansi-white{color:#e9eefb}
+.ansi-gray{color:#8b96b0}.ansi-bright-red{color:#ff8787}
+.ansi-bright-green{color:#a5f3a5}.ansi-bright-yellow{color:#ffe080}
+.ansi-bright-blue{color:#8bb8ff}.ansi-bright-magenta{color:#e0a0ff}
+.ansi-bright-cyan{color:#8deaff}.ansi-bright-white{color:#fff}
+.bg-red{background:#e5484d}.bg-green{background:#22c55e}.bg-yellow{background:#eab308}
+.bg-blue{background:#3b82f6}.bg-magenta{background:#a855f7}.bg-cyan{background:#06b6d4}
+
+/* ---------- APP: FILE MANAGER ---------- */
+.fm{display:flex;flex-direction:column;height:100%;background:var(--panel2)}
+.fm-toolbar{display:flex;gap:6px;padding:8px;border-bottom:1px solid var(--border);align-items:center;flex:0 0 auto}
+.fm-path{flex:1;font-size:11.5px;color:var(--muted);padding:7px 11px;background:rgba(255,255,255,.05);
+  border-radius:8px;font-family:ui-monospace,monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fm-btn{padding:7px 11px;border-radius:8px;background:rgba(255,255,255,.06);font-size:12px}
+.fm-btn:active{background:var(--accent)}
+.fm-list{flex:1;overflow-y:auto;padding:6px}
+.fm-item{display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:9px;
+  font-size:13px;transition:.1s}
+.fm-item:active{background:rgba(255,255,255,.1)}
+.fm-item .fi{font-size:20px;flex:0 0 auto}
+.fm-item .fn{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fm-item .fm{font-size:10.5px;color:var(--muted);font-family:ui-monospace,monospace;flex:0 0 auto}
+.fm-empty{padding:40px 20px;text-align:center;color:var(--muted);font-size:12px}
+
+/* ---------- APP: EDITOR ---------- */
+.editor{display:flex;flex-direction:column;height:100%;background:var(--panel2)}
+.editor-bar{display:flex;gap:6px;padding:8px;border-bottom:1px solid var(--border);align-items:center;flex:0 0 auto}
+.editor-bar input{flex:1;background:rgba(255,255,255,.06);border:1px solid var(--border);
+  color:#fff;padding:8px 11px;border-radius:8px;font-size:12px;outline:none;min-width:0}
+.editor-bar input:focus{border-color:var(--accent)}
+.editor-area{flex:1;width:100%;background:#0d1119;border:none;outline:none;resize:none;
+  color:#d6e2f5;padding:14px;font-family:ui-monospace,'Courier New',monospace;
+  font-size:13px;line-height:1.65;tab-size:2}
+
+/* ---------- APP: CALC ---------- */
+.calc{display:flex;flex-direction:column;height:100%;background:#12151f}
+.calc-disp{padding:24px 18px 16px;text-align:right;font-size:38px;font-weight:300;
+  word-break:break-all;min-height:110px;display:flex;align-items:flex-end;
+  justify-content:flex-end;color:#fff;font-variant-numeric:tabular-nums}
+.calc-grid{flex:1;display:grid;grid-template-columns:repeat(4,1fr);gap:1px;
+  background:rgba(255,255,255,.07)}
+.calc-grid button{background:#181c28;font-size:20px;color:#fff;transition:.08s}
+.calc-grid button:active{background:#2a3145}
+.calc-grid .op{color:var(--accent);font-size:22px}
+.calc-grid .eq{background:var(--accent);color:#fff}
+.calc-grid .fn{color:#f87171}
+
+/* ---------- APP: STORE ---------- */
+.store{padding:12px;display:flex;flex-direction:column;gap:10px;height:100%;overflow-y:auto}
+.store-head{font-size:12px;color:var(--muted);padding:4px;font-family:ui-monospace,monospace}
+.pkg{display:flex;gap:12px;align-items:center;padding:13px;background:rgba(255,255,255,.045);
+  border:1px solid var(--border);border-radius:13px;transition:.15s}
+.pkg:active{background:rgba(255,255,255,.07)}
+.pkg .pi{font-size:32px;width:46px;text-align:center;flex:0 0 46px}
+.pkg .pinfo{flex:1;min-width:0}
+.pkg .pn{font-size:14px;font-weight:600;display:flex;align-items:center;gap:6px}
+.pkg .pbadge{font-size:9px;padding:2px 6px;border-radius:5px;background:rgba(79,140,255,.25);
+  color:#8bb8ff;font-weight:500;text-transform:uppercase;letter-spacing:.5px}
+.pkg .pbadge.real{background:rgba(34,197,94,.25);color:#7ee787}
+.pkg .pd{font-size:11.5px;color:var(--muted);margin-top:4px;line-height:1.4}
+.pkg .ptag{font-size:10px;color:#6b7280;margin-top:4px;font-family:ui-monospace,monospace}
+.btn{background:var(--accent);color:#fff;padding:9px 15px;border-radius:9px;font-size:12.5px;
+  font-weight:600;white-space:nowrap;transition:.12s}
+.btn:active{filter:brightness(.85);transform:scale(.96)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn.gray{background:rgba(255,255,255,.1)}
+.btn.red{background:#e5484d}
+.btn.green{background:#22c55e}
+.bar{height:5px;background:rgba(255,255,255,.1);border-radius:5px;overflow:hidden;margin-top:8px}
+.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--accent),#a855f7);
+  transition:width .3s}
+
+/* ---------- APP: SETTINGS ---------- */
+.settings{padding:16px;display:flex;flex-direction:column;gap:20px;overflow-y:auto;height:100%}
+.set-sec{display:flex;flex-direction:column;gap:11px}
+.set-title{font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);
+  font-weight:600;font-family:ui-monospace,monospace}
+.walls{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+.wall{height:60px;border-radius:11px;border:2px solid transparent;transition:.15s}
+.wall.on{border-color:var(--accent);transform:scale(.95);box-shadow:0 0 20px rgba(79,140,255,.4)}
+.colors{display:flex;gap:10px;flex-wrap:wrap}
+.col{width:36px;height:36px;border-radius:50%;border:2px solid transparent;transition:.15s}
+.col.on{border-color:#fff;transform:scale(1.1);box-shadow:0 0 15px currentColor}
+.set-row{display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:12px 14px;background:rgba(255,255,255,.045);border-radius:12px;font-size:13px}
+.set-row input[type=text]{background:rgba(255,255,255,.08);border:1px solid var(--border);
+  color:#fff;padding:7px 11px;border-radius:8px;font-size:12.5px;width:140px;outline:none;
+  font-family:ui-monospace,monospace}
+.set-row input[type=text]:focus{border-color:var(--accent)}
+.set-row select{background:rgba(255,255,255,.08);border:1px solid var(--border);
+  color:#fff;padding:7px 11px;border-radius:8px;font-size:12.5px;outline:none}
+
+/* ---------- APP: PYTHON / GENERIC REPL ---------- */
+.repl{display:flex;flex-direction:column;height:100%;background:#0a0e1a;
+  font-family:ui-monospace,monospace;font-size:12.5px;color:#d4dcec}
+.repl-out{flex:1;overflow-y:auto;padding:12px;white-space:pre-wrap;word-break:break-word}
+.repl-line{display:flex;gap:8px;align-items:flex-start;border-top:1px solid var(--border);padding:8px 12px}
+.repl-line textarea{flex:1;background:none;border:none;outline:none;color:#d4dcec;
+  font-family:inherit;font-size:inherit;resize:none;line-height:1.5;min-height:22px;max-height:120px}
+.repl-prompt{color:#7ee787;flex:0 0 auto;white-space:pre;padding-top:1px}
+
+/* ---------- APP: HTOP ---------- */
+.htop{padding:14px;font-family:ui-monospace,monospace;font-size:12px;display:flex;
+  flex-direction:column;gap:12px;overflow-y:auto;height:100%}
+.htop .row{display:flex;align-items:center;gap:10px}
+.htop .row .lbl{width:56px;color:var(--muted);flex:0 0 auto}
+.htop .b{flex:1;height:15px;background:rgba(255,255,255,.08);border-radius:4px;overflow:hidden}
+.htop .b i{display:block;height:100%;background:linear-gradient(90deg,#22c55e,#eab308,#ef4444);
+  transition:width .5s;border-radius:4px}
+.htop .val{width:42px;text-align:right;color:var(--muted);flex:0 0 auto;
+  font-variant-numeric:tabular-nums}
+.htop .info{margin-top:10px;color:var(--muted);font-size:11.5px;line-height:1.8;
+  border-top:1px solid var(--border);padding-top:12px}
+.htop .info b{color:#d4dcec}
+
+/* ---------- APP: MUSIC ---------- */
+.music{padding:20px;display:flex;flex-direction:column;gap:16px;align-items:center;
+  height:100%;justify-content:center;background:linear-gradient(180deg,#1a1f30,#0d1119)}
+.cover{width:170px;height:170px;border-radius:18px;
+  background:linear-gradient(135deg,#a855f7,#4f8cff,#06b6d4);
+  display:grid;place-items:center;font-size:64px;
+  box-shadow:0 18px 50px rgba(79,140,255,.4),0 0 0 1px rgba(255,255,255,.08)}
+.m-title{font-size:16px;font-weight:600;text-align:center}
+.m-art{font-size:12px;color:var(--muted);text-align:center;margin-top:3px}
+.m-ctrl{display:flex;gap:24px;align-items:center;font-size:28px;margin-top:6px}
+.m-ctrl button:active{transform:scale(.88)}
+.m-bar{width:100%;max-width:300px;height:4px;background:rgba(255,255,255,.12);
+  border-radius:4px;overflow:hidden;margin-top:12px}
+.m-bar i{display:block;height:100%;width:0;background:var(--accent);transition:width .2s}
+
+/* ---------- APP: GENERIC PLACEHOLDER ---------- */
+.ph{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:14px;padding:30px;text-align:center;background:var(--panel2)}
+.ph .phi{font-size:70px;filter:drop-shadow(0 8px 20px rgba(79,140,255,.3))}
+.ph h2{font-size:20px;font-weight:600}
+.ph p{font-size:12.5px;color:var(--muted);line-height:1.6;max-width:340px}
+.ph .pkg-info{font-size:11px;color:#6b7280;font-family:ui-monospace,monospace;
+  padding:8px 12px;background:rgba(255,255,255,.05);border-radius:8px}
+
+/* ---------- LOADING OVERLAY ---------- */
+#loading{position:absolute;inset:0;background:rgba(5,7,13,.85);backdrop-filter:blur(8px);
+  display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;z-index:900}
+#loading.on{display:flex}
+#loading .spin{width:44px;height:44px;border:3px solid rgba(79,140,255,.2);
+  border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+#loading .ltxt{font-size:13px;color:#cfe0ff;font-family:ui-monospace,monospace}
+</style>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#4f8cff">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  });
+}
+</script>
+
+</head>
+<body>
+
+<div id="boot">
+  <div class="boot-logo">🐧</div>
+  <div class="boot-name">WEBLINUX</div>
+  <div class="boot-bar"><i></i></div>
+  <div class="boot-txt" id="bootTxt">Menginisialisasi kernel virtual...</div>
+</div>
+
+<div id="desktop">
+  <div id="wall"></div>
+  <div id="icons"></div>
+  <div id="wins"></div>
+
+  <div id="taskbar">
+    <button id="startBtn">⊞</button>
+    <div id="tasks"></div>
+    <div id="clock"><b id="time">--:--</b><span id="date">---</span></div>
+  </div>
+
+  <div id="startMenu">
+    <div class="sm-head">
+      <div class="sm-avatar" id="smAvatar">U</div>
+      <div>
+        <div class="sm-user" id="smUser">user</div>
+        <div class="sm-host" id="smHost">user@weblinux</div>
+      </div>
+    </div>
+    <input id="smSearch" placeholder="🔍  Cari aplikasi...">
+    <div id="smList"></div>
+    <div class="sm-foot">
+      <button id="smLock">🔒 Kunci</button>
+      <button id="smPower">⏻ Matikan</button>
+    </div>
+  </div>
+
+  <div id="toast"></div>
+  <div id="loading"><div class="spin"></div><div class="ltxt" id="ltxt">Memuat...</div></div>
+</div>
+
+<script>
+/* =====================================================================
+   WEBLINUX PRO — Sistem operasi web dengan shell Linux sungguhan
+   ===================================================================== */
+
+/* =====================================================================
+   1. VIRTUAL FILE SYSTEM (VFS) dengan persistensi localStorage
+   ===================================================================== */
+const VFS = (() => {
+  const KEY = 'wlinux_fs_v2';
+  let root = null;
+
+  function now(){ return Date.now(); }
+
+  function mkdir(name, children, mode){
+    return { t:'d', n:name, m:mode ?? 0o755, mt:now(), c:children || {} };
+  }
+  function mkfile(name, content, mode){
+    return { t:'f', n:name, m:mode ?? 0o644, mt:now(), c:content ?? '' };
+  }
+
+  function defaultFS(){
+    const r = mkdir('/', {});
+    r.c['etc'] = mkdir('etc', {
+      'hostname': mkfile('hostname','weblinux\n'),
+      'passwd':   mkfile('passwd','root:x:0:0:root:/root:/bin/bash\nuser:x:1000:1000:User:/home/user:/bin/bash\n'),
+      'group':    mkfile('group','root:x:0:\nuser:x:1000:\n'),
+      'os-release': mkfile('os-release',
+        'NAME="WebLinux"\nVERSION="2.0 Pro"\nID=weblinux\nPRETTY_NAME="WebLinux 2.0 Pro"\nHOME_URL="https://weblinux.local"\n'),
+      'hosts':    mkfile('hosts','127.0.0.1\tlocalhost\n127.0.1.1\tweblinux\n'),
+      'motd':     mkfile('motd','Selamat datang di WebLinux Pro!\n')
+    });
+    r.c['home'] = mkdir('home', { 'user': mkdir('user', {
+      'Dokumen': mkdir('Dokumen', {
+        'catatan.txt': mkfile('catatan.txt',
+          'Catatan pribadi:\n- Belajar Linux\n- Coba terminal: python3\n- Install paket via App Store\n'),
+        'todo.md': mkfile('todo.md',
+          '# TODO\n- [x] Boot WebLinux\n- [x] Buka terminal\n- [ ] Jalankan python3\n- [ ] Install paket WASM\n')
+      }),
+      'Gambar': mkdir('Gambar', {}),
+      'Musik': mkdir('Musik', {}),
+      'Unduhan': mkdir('Unduhan', {}),
+      'Proyek': mkdir('Proyek', {
+        'hello.py': mkfile('hello.py',
+          '#!/usr/bin/env python3\n# Skrip Python sungguhan - coba jalankan:\n# python3 hello.py\n\nfor i in range(5):\n    print(f"Halo dari Python! Baris {i+1}")\n\nprint("Selesai.")\n'),
+        'hello.js': mkfile('hello.js',
+          '// Skrip JavaScript - jalankan: node hello.js\nfor (let i = 1; i <= 5; i++) {\n  console.log("Halo dari Node! Baris " + i);\n}\nconsole.log("Selesai.");\n'),
+        'data.json': mkfile('data.json','{\n  "nama": "WebLinux",\n  "versi": "2.0",\n  "aplikasi": ["terminal", "editor", "python"]\n}\n')
+      }),
+      '.bashrc': mkfile('.bashrc',
+        '# Konfigurasi bash\n# alias ll="ls -la"\n# export EDITOR=nano\n'),
+      '.profile': mkfile('.profile','# Profil pengguna\n'),
+      'selamat-datang.txt': mkfile('selamat-datang.txt',
+        '╔══════════════════════════════════════╗\n║   Selamat Datang di WebLinux Pro!    ║\n╚══════════════════════════════════════╝\n\nTips:\n- Ketik "help" untuk melihat perintah\n- Ketik "python3" untuk membuka Python 3 asli\n- Buka App Store untuk install paket\n- Gunakan pip untuk install modul Python\n- Coba: cowsay "Halo Linux"\n')
+    }) });
+    r.c['root'] = mkdir('root', {});
+    r.c['tmp'] = mkdir('tmp', {});
+    r.c['var'] = mkdir('var', { 'log': mkdir('log', {}) });
+    r.c['usr'] = mkdir('usr', {
+      'bin': mkdir('bin', {}),
+      'lib': mkdir('lib', {}),
+      'share': mkdir('share', {})
+    });
+    r.c['bin'] = mkdir('bin', {});
+    r.c['sbin'] = mkdir('sbin', {});
+    r.c['opt'] = mkdir('opt', {});
+    r.c['proc'] = mkdir('proc', {
+      'version': mkfile('version','Linux version 6.1.0-weblinux (wasm) #1 SMP\n'),
+      'cpuinfo': mkfile('cpuinfo','processor\t: 0\nmodel name\t: WebAssembly Virtual CPU\n'),
+      'meminfo': mkfile('meminfo','MemTotal:        4194304 kB\nMemFree:         2097152 kB\n')
+    });
+    r.c['sys'] = mkdir('sys', {});
+    r.c['dev'] = mkdir('dev', {
+      'null': mkfile('null',''), 'zero': mkfile('zero',''),
+      'random': mkfile('random','[acak]'), 'stdin': mkfile('stdin',''),
+      'stdout': mkfile('stdout',''), 'stderr': mkfile('stderr','')
+    });
+    r.c['boot'] = mkdir('boot', { 'vmlinuz': mkfile('vmlinuz','[kernel biner]') });
+    return r;
+  }
+
+  function load(){
+    try{
+      const s = localStorage.getItem(KEY);
+      if(s){ root = JSON.parse(s); return true; }
+    }catch(e){}
+    root = defaultFS();
+    return false;
+  }
+  function save(){
+    try{ localStorage.setItem(KEY, JSON.stringify(root)); }
+    catch(e){ /* penuh */ }
+  }
+  function reset(){ root = defaultFS(); save(); }
+
+  function normalize(p, cwd){
+    if(!p) return cwd;
+    if(p.startsWith('/')) return p;
+    if(p === '~') return '/home/' + (window.__WU || 'user');
+    if(p.startsWith('~/')) return '/home/' + (window.__WU || 'user') + p.slice(1);
+    return (cwd === '/' ? '' : cwd) + '/' + p;
+  }
+  function resolve(p, cwd){
+    const path = normalize(p, cwd);
+    const parts = path.split('/').filter(Boolean);
+    const out = [];
+    for(const seg of parts){
+      if(seg === '.') continue;
+      if(seg === '..'){ out.pop(); continue; }
+      out.push(seg);
+    }
+    return '/' + out.join('/');
+  }
+  function get(path){
+    if(path === '/') return root;
+    const parts = path.split('/').filter(Boolean);
+    let cur = root;
+    for(const p of parts){
+      if(!cur || cur.t !== 'd' || !cur.c[p]) return null;
+      cur = cur.c[p];
+    }
+    return cur;
+  }
+  function parent(path){
+    const i = path.lastIndexOf('/');
+    return i <= 0 ? '/' : path.slice(0, i);
+  }
+  function basename(path){
+    if(path === '/') return '/';
+    return path.slice(path.lastIndexOf('/') + 1);
+  }
+  function create(path, node){
+    const par = get(parent(path));
+    if(!par || par.t !== 'd') return { err:'ENOENT' };
+    const name = basename(path);
+    if(par.c[name]) return { err:'EEXIST' };
+    par.c[name] = node;
+    save();
+    return { ok:true };
+  }
+  function remove(path){
+    if(path === '/') return { err:'EBUSY' };
+    const par = get(parent(path));
+    if(!par) return { err:'ENOENT' };
+    const name = basename(path);
+    if(!par.c[name]) return { err:'ENOENT' };
+    delete par.c[name];
+    save();
+    return { ok:true };
+  }
+  function write(path, content){
+    const node = get(path);
+    if(node){
+      if(node.t !== 'f') return { err:'EISDIR' };
+      node.c = content; node.mt = now(); save(); return { ok:true };
+    }
+    return create(path, mkfile(basename(path), content));
+  }
+  function read(path){
+    const n = get(path);
+    if(!n) return { err:'ENOENT' };
+    if(n.t === 'd') return { err:'EISDIR' };
+    return { ok:true, content:n.c };
+  }
+  function list(path){
+    const n = get(path);
+    if(!n) return { err:'ENOENT' };
+    if(n.t !== 'd') return { err:'ENOTDIR' };
+    return { ok:true, entries:Object.values(n.c) };
+  }
+  function exists(path){ return !!get(path); }
+  function isDir(path){ const n = get(path); return n && n.t === 'd'; }
+  function isFile(path){ const n = get(path); return n && n.t === 'f'; }
+
+  /* Glob expansion */
+  function glob(pattern, cwd){
+    if(!/[*?]/.test(pattern)) return [pattern];
+    const abs = resolve(pattern, cwd);
+    const parts = abs.split('/').filter(Boolean);
+    let candidates = ['/'];
+    for(const part of parts){
+      const next = [];
+      const re = globToRegex(part);
+      for(const base of candidates){
+        const node = get(base);
+        if(!node || node.t !== 'd') continue;
+        for(const name of Object.keys(node.c)){
+          if(name.startsWith('.') && !part.startsWith('.')) continue;
+          if(re.test(name)) next.push((base === '/' ? '' : base) + '/' + name);
+        }
+      }
+      candidates = next;
+    }
+    return candidates.length ? candidates : [pattern];
+  }
+  function globToRegex(pat){
+    const re = pat.replace(/[.+^${}()|[\]\\]/g, '\\$&')
+      .replace(/\*/g,'[^/]*').replace(/\?/g,'[^/]');
+    return new RegExp('^' + re + '$');
+  }
+
+  load();
+
+  return {
+    get root(){ return root; },
+    save, reset, resolve, get, parent, basename,
+    create, remove, write, read, list, exists, isDir, isFile,
+    mkdir: (name, kids) => mkdir(name, kids),
+    mkfile: (name, content) => mkfile(name, content),
+    glob, defaultFS
+  };
+})();
+
+/* =====================================================================
+   2. FORMATTER ANSI (untuk terminal)
+   ===================================================================== */
+function ansiToHtml(str){
+  const esc = s => s.replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+  let out = '';
+  let i = 0;
+  const stack = [];
+  const map = {
+    0:'', 1:'ansi-bold', 2:'ansi-dim', 3:'ansi-italic', 4:'ansi-underline',
+    30:'ansi-black',31:'ansi-red',32:'ansi-green',33:'ansi-yellow',
+    34:'ansi-blue',35:'ansi-magenta',36:'ansi-cyan',37:'ansi-white',90:'ansi-gray',
+    91:'ansi-bright-red',92:'ansi-bright-green',93:'ansi-bright-yellow',
+    94:'ansi-bright-blue',95:'ansi-bright-magenta',96:'ansi-bright-cyan',97:'ansi-bright-white',
+    40:'bg-red',42:'bg-green',43:'bg-yellow',44:'bg-blue',45:'bg-magenta',46:'bg-cyan'
+  };
+  while(i < str.length){
+    if(str[i] === '\x1b' && str[i+1] === '['){
+      const end = str.indexOf('m', i+2);
+      if(end !== -1){
+        if(stack.length){ out += '</span>'.repeat(stack.length); stack.length = 0; }
+        const codes = str.slice(i+2, end).split(';').map(Number);
+        const cls = codes.map(c => map[c] || '').filter(Boolean).join(' ');
+        if(cls){ out += '<span class="' + cls + '">'; stack.push(1); }
+        i = end + 1;
+        continue;
+      }
+    }
+    out += esc(str[i]);
+    i++;
+  }
+  if(stack.length) out += '</span>'.repeat(stack.length);
+  return out;
+}
+
+/* =====================================================================
+   3. SHELL — parser & executor sungguhan
+   ===================================================================== */
+class Shell {
+  constructor(terminal){
+    this.term = terminal;
+    this.cwd = '/home/user';
+    this.env = {
+      HOME: '/home/user',
+      USER: 'user',
+      PWD: '/home/user',
+      PATH: '/usr/local/bin:/usr/bin:/bin',
+      SHELL: '/bin/bash',
+      TERM: 'xterm-256color',
+      LANG: 'id_ID.UTF-8',
+      EDITOR: 'nano',
+      PS1: '\\u@\\h:\\w\\$ '
+    };
+    this.aliases = { ll:'ls -la', la:'ls -A', '..':'cd ..', grep:'grep --color=auto' };
+    this.history = [];
+    this.exitCode = 0;
+    this.running = false;
+    this.stdin_buf = '';
+  }
+
+  colorize(text, color){
+    const map = { red:31, green:32, yellow:33, blue:34, magenta:35, cyan:36, white:37,
+      gray:90, bred:91, bgreen:92, byellow:93, bblue:94, bmagenta:95, bcyan:96 };
+    return '\x1b[' + (map[color] || 0) + 'm' + text + '\x1b[0m';
+  }
+
+  prompt(){
+    const home = this.env.HOME;
+    let cwd = this.cwd;
+    if(cwd.startsWith(home)) cwd = '~' + cwd.slice(home.length);
+    const short = cwd.length > 30 ? '…' + cwd.slice(-28) : cwd;
+    return '\x1b[1;32m' + this.env.USER + '@weblinux\x1b[0m:\x1b[1;34m' + short + '\x1b[0m' + (this.env.USER === 'root' ? '#' : '$') + ' ';
+  }
+
+  /* -------- Tokenizer -------- */
+  tokenize(input){
+    const tokens = [];
+    let i = 0;
+    while(i < input.length){
+      const c = input[i];
+      if(/\s/.test(c)){ i++; continue; }
+      if(c === '#') break;
+
+      if(c === '|'){
+        if(input[i+1] === '|'){ tokens.push({t:'or'}); i+=2; }
+        else { tokens.push({t:'pipe'}); i++; }
+        continue;
+      }
+      if(c === '&'){
+        if(input[i+1] === '&'){ tokens.push({t:'and'}); i+=2; }
+        else { tokens.push({t:'bg'}); i++; }
+        continue;
+      }
+      if(c === ';'){ tokens.push({t:'semi'}); i++; continue; }
+      if(c === '>'){
+        if(input[i+1] === '>'){ tokens.push({t:'append'}); i+=2; }
+        else { tokens.push({t:'out'}); i++; }
+        continue;
+      }
+      if(c === '<'){ tokens.push({t:'in'}); i++; continue; }
+      if(c === '\n'){ tokens.push({t:'semi'}); i++; continue; }
+
+      /* Word with quoting & substitution */
+      let val = '';
+      let quoted = false;
+      while(i < input.length && !/[\s|&;<>]/.test(input[i])){
+        const ch = input[i];
+        if(ch === '\\'){
+          i++;
+          if(i < input.length){ val += input[i++]; }
+          continue;
+        }
+        if(ch === '"'){
+          quoted = true;
+          i++;
+          while(i < input.length && input[i] !== '"'){
+            if(input[i] === '\\'){
+              i++;
+              const e = input[i++];
+              val += e === 'n' ? '\n' : e === 't' ? '\t' : e === 'r' ? '\r' : e;
+            }
+            else if(input[i] === '$'){ val += this.expandVar(input, k => k); i = k2; /* fallback */ }
+            else val += input[i++];
+          }
+          i++;
+          continue;
+        }
+        if(ch === "'"){
+          quoted = true;
+          i++;
+          while(i < input.length && input[i] !== "'") val += input[i++];
+          i++;
+          continue;
+        }
+        if(ch === '$'){ val += this.expandVar(input, k => k); i = this._lastIdx; continue; }
+        val += input[i++];
+      }
+      tokens.push({ t:'word', v:val, q:quoted });
+    }
+    return tokens;
+  }
+
+  /* Expand $VAR, ${VAR}, $(cmd), $((expr)) */
+  expandVar(input, _unused){
+    let i = this._expandIdx;
+    if(i === undefined) i = 0;
+    /* Not actually used here; expansion done in expandVars() */
+    return '';
+  }
+
+  expandVars(str){
+    let out = '';
+    let i = 0;
+    while(i < str.length){
+      if(str[i] === '$'){
+        if(str[i+1] === '(' && str[i+2] === '('){
+          /* arithmetic */
+          i += 3;
+          let expr = '';
+          let depth = 2;
+          while(i < str.length && depth > 0){
+            if(str[i] === '(') depth++;
+            else if(str[i] === ')'){ depth--; if(depth === 0) break; }
+            expr += str[i++];
+          }
+          i += 2;
+          try{ out += String(this.arith(expr)); }
+          catch(e){ out += '0'; }
+          continue;
+        }
+        if(str[i+1] === '('){
+          /* command substitution */
+          i += 2;
+          let cmd = '';
+          let depth = 1;
+          while(i < str.length && depth > 0){
+            if(str[i] === '(') depth++;
+            else if(str[i] === ')'){ depth--; if(depth === 0) break; }
+            cmd += str[i++];
+          }
+          i++;
+          const res = this.subshellSync(cmd);
+          out += res.replace(/\n+$/,'');
+          continue;
+        }
+        if(str[i+1] === '{'){
+          i += 2;
+          let name = '';
+          while(i < str.length && str[i] !== '}') name += str[i++];
+          i++;
+          out += this.env[name] || '';
+          continue;
+        }
+        if(/[A-Za-z_]/.test(str[i+1])){
+          i++;
+          let name = '';
+          while(i < str.length && /[A-Za-z0-9_]/.test(str[i])) name += str[i++];
+          out += this.env[name] || '';
+          continue;
+        }
+        if(str[i+1] === '?'){
+          out += String(this.exitCode);
+          i += 2;
+          continue;
+        }
+        out += '$';
+        i++;
+        continue;
+      }
+      out += str[i++];
+    }
+    return out;
+  }
+
+  arith(expr){
+    const cleaned = expr.replace(/[^0-9+\-*/%(). <>=!&|?:]/g, ' ');
+    const replaced = cleaned
+      .replace(/([A-Za-z_]\w*)/g, (_, n) => this.env[n] || '0');
+    try{
+      const fn = new Function('return (' + replaced + ')');
+      const v = fn();
+      return typeof v === 'number' ? v : 0;
+    }catch(e){ return 0; }
+  }
+
+  async subshell(cmd){
+    const tmp = new Shell(this.term);
+    tmp.cwd = this.cwd;
+    tmp.env = { ...this.env };
+    tmp.aliases = { ...this.aliases };
+    return await tmp.capture(cmd);
+  }
+  subshellSync(cmd){
+    /* Only handles simple cases synchronously */
+    const tokens = this.tokenize(cmd);
+    if(!tokens.length) return '';
+    const first = tokens[0];
+    if(first.t !== 'word') return '';
+    const cmd0 = this.expandVars(first.v);
+    if(cmd0 === 'pwd') return this.cwd;
+    if(cmd0 === 'whoami') return this.env.USER;
+    if(cmd0 === 'echo'){
+      return tokens.slice(1).map(t => this.expandVars(t.v)).join(' ');
+    }
+    if(cmd0 === 'date') return new Date().toString();
+    if(cmd0 === 'hostname') return 'weblinux';
+    return '';
+  }
+
+  async capture(cmd){
+    let buf = '';
+    const fake = {
+      write: s => { buf += s; },
+      writeln: s => { buf += (s ?? '') + '\n'; }
+    };
+    await this.executeInternal(cmd, { capture:fake });
+    return buf;
+  }
+
+  /* Main execution pipeline */
+  async execute(input){
+    if(!input.trim()) return;
+    this.history.push(input);
+    return await this.executeInternal(input, {});
+  }
+
+  async executeInternal(input, opts){
+    /* Split by ; into statements, then handle && and || */
+    const tokens = this.tokenize(input);
+    if(!tokens.length) return;
+
+    /* Build list of pipelines separated by ; & && || */
+    const groups = [[]];
+    for(const tk of tokens){
+      if(tk.t === 'semi' || tk.t === 'bg'){
+        groups[groups.length-1].sep = tk.t;
+        groups.push([]);
+        continue;
+      }
+      if(tk.t === 'and' || tk.t === 'or'){
+        groups[groups.length-1].logic = tk.t;
+        groups.push([]);
+        continue;
+      }
+      groups[groups.length-1].push(tk);
+    }
+
+    let lastExit = 0;
+    let prevLogic = null;
+    for(const g of groups){
+      if(!g.length){
+        if(g.sep === 'semi' || g.sep === 'bg') prevLogic = null;
+        continue;
+      }
+      if(prevLogic === 'and' && lastExit !== 0){
+        prevLogic = g.logic || null;
+        continue;
+      }
+      if(prevLogic === 'or' && lastExit === 0){
+        prevLogic = g.logic || null;
+        continue;
+      }
+      lastExit = await this.runPipeline(g, opts);
+      prevLogic = g.logic || null;
+    }
+    this.exitCode = lastExit;
+    return lastExit;
+  }
+
+  /* Split tokens by pipes */
+  async runPipeline(tokens, opts){
+    const segments = [[]];
+    for(const tk of tokens){
+      if(tk.t === 'pipe'){ segments.push([]); continue; }
+      segments[segments.length-1].push(tk);
+    }
+
+    let prevOutput = '';
+    let exit = 0;
+    for(let i = 0; i < segments.length; i++){
+      const seg = segments[i];
+      const isLast = i === segments.length - 1;
+      const result = await this.runCommand(seg, prevOutput, opts, isLast);
+      exit = result.exit;
+      prevOutput = result.output;
+      if(!isLast && exit !== 0) break;
+    }
+    return exit;
+  }
+
+  /* Execute one simple command with redirects */
+  async runCommand(tokens, stdin, opts, isLast){
+    /* Parse redirects */
+    const args = [];
+    let redirOut = null, redirAppend = false, redirIn = null;
+    for(let i = 0; i < tokens.length; i++){
+      const tk = tokens[i];
+      if(tk.t === 'out' || tk.t === 'append'){
+        const target = tokens[++i];
+        if(target) { redirOut = this.expandVars(target.v); redirAppend = tk.t === 'append'; }
+        continue;
+      }
+      if(tk.t === 'in'){
+        const target = tokens[++i];
+        if(target) redirIn = this.expandVars(target.v);
+        continue;
+      }
+      if(tk.t === 'word'){
+        args.push(this.expandVars(tk.v));
+      }
+    }
+
+    if(!args.length){
+      return { exit:0, output:'' };
+    }
+
+    /* Alias expansion */
+    let cmd = args[0];
+    let realArgs = args.slice(1);
+    let expanded = false;
+    while(this.aliases[cmd] && !expanded){
+      const parts = this.tokenize(this.aliases[cmd]).filter(t => t.t === 'word').map(t => this.expandVars(t.v));
+      cmd = parts[0];
+      realArgs = parts.slice(1).concat(realArgs);
+      expanded = true;
+    }
+
+    /* Input redirect */
+    if(redirIn){
+      const abs = VFS.resolve(redirIn, this.cwd);
+      const r = VFS.read(abs);
+      if(r.err){ return { exit:1, output:this.colorize(cmd + ': ' + redirIn + ': Tidak ada berkas', 'red') + '\n' }; }
+      stdin = r.content;
+    }
+
+    /* Glob expansion of args */
+    const globbed = [];
+    for(const a of realArgs){
+      if(/[*?]/.test(a) && !a.includes("'")){
+        const matches = VFS.glob(a, this.cwd).filter(m => VFS.exists(m));
+        if(matches.length) globbed.push(...matches);
+        else globbed.push(a);
+      } else globbed.push(a);
+    }
+
+    /* Find and run command */
+    const commands = window.__COMMANDS__;
+    const fn = commands[cmd];
+    let output = '';
+    let exit = 0;
+    let errOutput = '';
+
+    if(!fn){
+      output = this.colorize(cmd + ': perintah tidak ditemukan', 'red') + '\n';
+      if(cmd.startsWith('./')){
+        output = this.colorize('bash: ' + cmd + ': Tidak dapat mengeksekusi berkas', 'red') + '\n';
+      }
+      exit = 127;
+    } else {
+      const ctx = {
+        shell: this,
+        stdin: stdin || '',
+        cwd: this.cwd,
+        env: this.env,
+        args: globbed,
+        argv: [cmd, ...globbed],
+        out: [],
+        exit: 0
+      };
+      try{
+        const res = await fn(ctx);
+        if(typeof res === 'string') output = res;
+        else if(res && typeof res === 'object'){
+          output = res.stdout || '';
+          errOutput = res.stderr || '';
+          exit = res.exit || 0;
+        }
+        if(ctx.exit) exit = ctx.exit;
+      }catch(e){
+        output = this.colorize(cmd + ': ' + e.message, 'red') + '\n';
+        exit = 1;
+      }
+    }
+
+    /* Output redirect */
+    const finalOut = output + errOutput;
+    if(redirOut && (isLast || true)){
+      const abs = VFS.resolve(redirOut, this.cwd);
+      const existing = redirAppend && VFS.exists(abs) ? (VFS.read(abs).content || '') : '';
+      const stripped = finalOut.replace(/\x1b\[[0-9;]*m/g, '');
+      VFS.write(abs, existing + stripped);
+      if(!opts.capture) return { exit, output:'' };
+    }
+
+    if(opts.capture) opts.capture.write(output + errOutput);
+    else if(opts.capture === undefined && !redirOut){
+      /* Normal terminal output */
+    }
+    return { exit, output: finalOut };
+  }
+
+  /* Resolve path helper */
+  resolvePath(p){ return VFS.resolve(p, this.cwd); }
+}
+
+/* =====================================================================
+   4. COMMAND REGISTRY — implementasi command Linux sungguhan
+   ===================================================================== */
+window.__COMMANDS__ = {};
+
+const C = window.__COMMANDS__;
+const col = (s, c) => {
+  const map = { red:31, green:32, yellow:33, blue:34, magenta:35, cyan:36, gray:90,
+    bred:91, bgreen:92, byellow:93, bblue:94, bmagenta:95, bcyan:96, bold:1, dim:2 };
+  return '\x1b[' + (map[c] || 0) + 'm' + s + '\x1b[0m';
+};
+
+/* ---------- Bantuan ---------- */
+C.help = (ctx) => {
+  const L = [];
+  L.push(col('╔══════════════════════════════════════════════════════╗', 'bcyan'));
+  L.push(col('║            WEBLINUX PRO — DAFTAR PERINTAH            ║', 'bcyan'));
+  L.push(col('╚══════════════════════════════════════════════════════╝', 'bcyan'));
+  L.push('');
+  L.push(col('► BERKAS & DIREKTORI', 'byellow'));
+  L.push('  ls, cd, pwd, cat, mkdir, rmdir, touch, rm, cp, mv, ln');
+  L.push('  chmod, stat, file, du, df, tree, find, locate, realpath');
+  L.push('');
+  L.push(col('► TEKS & PEMROSESAN', 'byellow'));
+  L.push('  echo, printf, grep, sed, awk, sort, uniq, head, tail, wc');
+  L.push('  cut, tr, rev, tac, paste, join, split, base64, md5sum, sha256sum');
+  L.push('');
+  L.push(col('► SISTEM', 'byellow'));
+  L.push('  date, uptime, whoami, id, uname, hostname, env, export, unset');
+  L.push('  ps, top, kill, free, df, du, clear, exit, history, alias, unalias');
+  L.push('  reboot, shutdown, neofetch, screenfetch, cal, sleep, time');
+  L.push('');
+  L.push(col('► JARINGAN', 'byellow'));
+  L.push('  curl, wget, ping, ifconfig, ip, netstat, hostname');
+  L.push('');
+  L.push(col('► PEMROGRAMAN', 'byellow'));
+  L.push('  python3, python, pip, node, js, bc, expr, seq, factor');
+  L.push('  sqlite3, lua, perl (jika paket di-install)');
+  L.push('');
+  L.push(col('► PAKET', 'byellow'));
+  L.push('  apt, apt-get, pacman — install/remove/search daftar paket');
+  L.push('  pip install <modul> — install modul Python sungguhan');
+  L.push('');
+  L.push(col('► HIBURAN', 'byellow'));
+  L.push('  cowsay, figlet, fortune, sl, yes, banner, lolcat');
+  L.push('');
+  L.push(col('Fitur shell:', 'bgreen'));
+  L.push('  • Pipe: cat file | grep foo | wc -l');
+  L.push('  • Redirect: echo hi > file.txt  /  echo hi >> file.txt');
+  L.push('  • Logika: cmd1 && cmd2  /  cmd1 || cmd2  /  cmd1 ; cmd2');
+  L.push('  • Variabel: $HOME, $USER, ${VAR}, $(pwd), $((2+2))');
+  L.push('  • Globbing: ls *.txt  /  cat file?.log');
+  L.push('  • Riwayat: ↑ / ↓  •  Tab: penyelesaian otomatis');
+  L.push('');
+  L.push(col('Selamat menjelajah! 🐧', 'bgreen'));
+  return L.join('\n') + '\n';
+};
+
+/* ---------- Berkas & direktori ---------- */
+C.ls = (ctx) => {
+  const flags = new Set();
+  const paths = [];
+  for(const a of ctx.args){
+    if(a.startsWith('-') && a.length > 1) for(const c of a.slice(1)) flags.add(c);
+    else paths.push(a);
+  }
+  if(!paths.length) paths.push('.');
+  const showAll = flags.has('a') || flags.has('A');
+  const long = flags.has('l');
+  const out = [];
+  let multi = paths.length > 1;
+  for(let i = 0; i < paths.length; i++){
+    const p = paths[i];
+    const abs = VFS.resolve(p, ctx.cwd);
+    const node = VFS.get(abs);
+    if(!node){
+      out.push(col('ls: tidak dapat mengakses \'' + p + '\': Tidak ada berkas atau direktori', 'red'));
+      ctx.exit = 2;
+      continue;
+    }
+    if(multi) out.push(col(p + ':', 'bblue'));
+    if(node.t === 'f'){ out.push(p); continue; }
+    let names = Object.keys(node.c);
+    if(!showAll) names = names.filter(n => !n.startsWith('.'));
+    names.sort();
+    if(!names.length){ if(multi) out.push(''); continue; }
+    if(long || flags.has('o')){
+      for(const n of names){
+        const ch = node.c[n];
+        const perm = (ch.t === 'd' ? 'd' : '-') + 'rwxr-xr-x';
+        const size = ch.t === 'd' ? 4096 : (ch.c || '').length;
+        const dt = new Date(ch.mt);
+        const dstr = dt.toISOString().slice(0,10);
+        const tstr = dt.toTimeString().slice(0,5);
+        const nm = ch.t === 'd' ? col(n + '/', 'bblue') : n;
+        out.push(perm + ' 1 ' + (ctx.env.USER||'user').padEnd(6) + ' ' + (ctx.env.USER||'user').padEnd(6) +
+                 ' ' + String(size).padStart(6) + ' ' + dstr + ' ' + tstr + ' ' + nm);
+      }
+    } else if(flags.has('1')){
+      out.push(names.map(n => node.c[n].t === 'd' ? col(n + '/', 'bblue') : n).join('\n'));
+    } else {
+      out.push(names.map(n => node.c[n].t === 'd' ? col(n + '/', 'bblue') : (node.c[n].m & 0o111 ? col(n, 'bgreen') : n)).join('   '));
+    }
+    if(i < paths.length - 1) out.push('');
+  }
+  return out.join('\n') + '\n';
+};
+
+C.cd = (ctx) => {
+  let target = ctx.args[0] || ctx.env.HOME;
+  const abs = VFS.resolve(target, ctx.cwd);
+  if(!VFS.exists(abs)) return col('cd: ' + target + ': Tidak ada direktori seperti itu', 'red') + '\n';
+  if(!VFS.isDir(abs)) return col('cd: ' + target + ': Bukan direktori', 'red') + '\n';
+  ctx.shell.cwd = abs;
+  ctx.shell.env.PWD = abs;
+  return '';
+};
+
+C.pwd = (ctx) => ctx.cwd + '\n';
+
+C.cat = (ctx) => {
+  let out = '';
+  let hadErr = false;
+  if(ctx.args.length === 0){ out = ctx.stdin; }
+  else {
+    for(const p of ctx.args){
+      if(p.startsWith('-')) continue;
+      const abs = VFS.resolve(p, ctx.cwd);
+      const r = VFS.read(abs);
+      if(r.err){
+        out += col('cat: ' + p + ': ' + (r.err === 'EISDIR' ? 'Adalah sebuah direktori' : 'Tidak ada berkas'), 'red') + '\n';
+        hadErr = true;
+        continue;
+      }
+      out += r.content;
+      if(!r.content.endsWith('\n')) out += '\n';
+    }
+  }
+  if(hadErr) ctx.exit = 1;
+  return out;
+};
+
+C.mkdir = (ctx) => {
+  const parents = ctx.args.includes('-p');
+  const names = ctx.args.filter(a => !a.startsWith('-'));
+  let out = '';
+  for(const n of names){
+    const abs = VFS.resolve(n, ctx.cwd);
+    if(VFS.exists(abs)){ out += col('mkdir: tidak dapat membuat direktori \'' + n + '\': Berkas sudah ada', 'red') + '\n'; ctx.exit = 1; continue; }
+    if(parents){
+      /* create intermediate */
+      const parts = abs.split('/').filter(Boolean);
+      let cur = '';
+      for(const p of parts){
+        cur += '/' + p;
+        if(!VFS.exists(cur)) VFS.create(cur, VFS.mkdir(p, {}));
+      }
+    } else {
+      const par = VFS.parent(abs);
+      if(!VFS.exists(par)){ out += col('mkdir: tidak dapat membuat direktori \'' + n + '\': Tidak ada berkas atau direktori', 'red') + '\n'; ctx.exit = 1; continue; }
+      VFS.create(abs, VFS.mkdir(VFS.basename(abs), {}));
+    }
+  }
+  return out;
+};
+
+C.rmdir = (ctx) => {
+  const names = ctx.args.filter(a => !a.startsWith('-'));
+  let out = '';
+  for(const n of names){
+    const abs = VFS.resolve(n, ctx.cwd);
+    const node = VFS.get(abs);
+    if(!node){ out += col('rmdir: gagal menghapus \'' + n + '\': Tidak ada berkas', 'red') + '\n'; ctx.exit = 1; continue; }
+    if(node.t !== 'd'){ out += col('rmdir: gagal menghapus \'' + n + '\': Bukan direktori', 'red') + '\n'; ctx.exit = 1; continue; }
+    if(Object.keys(node.c).length){ out += col('rmdir: gagal menghapus \'' + n + '\': Direktori tidak kosong', 'red') + '\n'; ctx.exit = 1; continue; }
+    VFS.remove(abs);
+  }
+  return out;
+};
+
+C.touch = (ctx) => {
+  for(const n of ctx.args){
+    const abs = VFS.resolve(n, ctx.cwd);
+    if(VFS.exists(abs)){
+      VFS.get(abs).mt = Date.now();
+    } else {
+      VFS.create(abs, VFS.mkfile(VFS.basename(abs), ''));
+    }
+  }
+  VFS.save();
+  return '';
+};
+
+C.rm = (ctx) => {
+  const recursive = ctx.args.some(a => a.includes('r') || a.includes('R'));
+  const force = ctx.args.some(a => a.includes('f'));
+  const names = ctx.args.filter(a => !a.startsWith('-'));
+  let out = '';
+  function del(abs){
+    const node = VFS.get(abs);
+    if(!node) return;
+    if(node.t === 'd' && recursive){
+      for(const k of Object.keys(node.c)) del((abs === '/' ? '' : abs) + '/' + k);
+    }
+    VFS.remove(abs);
+  }
+  for(const n of names){
+    const abs = VFS.resolve(n, ctx.cwd);
+    const node = VFS.get(abs);
+    if(!node){ if(!force){ out += col('rm: tidak dapat menghapus \'' + n + '\': Tidak ada berkas', 'red') + '\n'; ctx.exit = 1; } continue; }
+    if(node.t === 'd' && !recursive){ out += col('rm: tidak dapat menghapus \'' + n + '\': Adalah sebuah direktori', 'red') + '\n'; ctx.exit = 1; continue; }
+    del(abs);
+  }
+  return out;
+};
+
+C.cp = (ctx) => {
+  const recursive = ctx.args.some(a => a.startsWith('-') && a.includes('r'));
+  const names = ctx.args.filter(a => !a.startsWith('-'));
+  if(names.length < 2) return col('cp: kekurangan operand', 'red') + '\n';
+  const dst = names.pop();
+  let out = '';
+  const dstAbs = VFS.resolve(dst, ctx.cwd);
+  const dstIsDir = VFS.isDir(dstAbs);
+  function copyNode(srcAbs, targetAbs){
+    const n = VFS.get(srcAbs);
+    if(!n) return;
+    if(n.t === 'f'){
+      VFS.write(targetAbs, n.c);
+    } else {
+      VFS.create(targetAbs, VFS.mkdir(VFS.basename(targetAbs), {}));
+      for(const k of Object.keys(n.c)) copyNode(srcAbs + '/' + k, targetAbs + '/' + k);
+    }
+  }
+  for(const s of names){
+    const srcAbs = VFS.resolve(s, ctx.cwd);
+    if(!VFS.exists(srcAbs)){ out += col('cp: tidak dapat stat \'' + s + '\': Tidak ada berkas', 'red') + '\n'; ctx.exit = 1; continue; }
+    const node = VFS.get(srcAbs);
+    if(node.t === 'd' && !recursive){ out += col('cp: -r tidak ditentukan; melewatkan direktori \'' + s + '\'', 'red') + '\n'; continue; }
+    let target;
+    if(dstIsDir) target = dstAbs + '/' + VFS.basename(srcAbs);
+    else target = dstAbs;
+    copyNode(srcAbs, target);
+  }
+  return out;
+};
+
+C.mv = (ctx) => {
+  const names = ctx.args.filter(a => !a.startsWith('-'));
+  if(names.length < 2) return col('mv: kekurangan operand', 'red') + '\n';
+  const dst = names.pop();
+  let out = '';
+  const dstAbs = VFS.resolve(dst, ctx.cwd);
+  const dstIsDir = VFS.isDir(dstAbs);
+  for(const s of names){
+    const srcAbs = VFS.resolve(s, ctx.cwd);
+    const n = VFS.get(srcAbs);
+    if(!n){ out += col('mv: tidak dapat stat \'' + s + '\': Tidak ada berkas', 'red') + '\n'; ctx.exit = 1; continue; }
+    const target = dstIsDir ? dstAbs + '/' + VFS.basename(srcAbs) : dstAbs;
+    /* Copy then delete */
+    function copyNode(sa, ta){
+      const nd = VFS.get(sa);
+      if(nd.t === 'f') VFS.write(ta, nd.c);
+      else { VFS.create(ta, VFS.mkdir(VFS.basename(ta), {})); for(const k of Object.keys(nd.c)) copyNode(sa + '/' + k, ta + '/' + k); }
+    }
+    copyNode(srcAbs, target);
+    VFS.remove(srcAbs);
+  }
+  return out;
+};
+
+C.ln = (ctx) => {
+  if(ctx.args.length < 2) return col('ln: kekurangan operand', 'red') + '\n';
+  const [src, dst] = ctx.args;
+  const srcAbs = VFS.resolve(src, ctx.cwd);
+  const dstAbs = VFS.resolve(dst, ctx.cwd);
+  if(!VFS.exists(srcAbs)) return col('ln: gagal membuat tautan: Tidak ada berkas', 'red') + '\n';
+  VFS.create(dstAbs, VFS.mkfile(VFS.basename(dstAbs), '[tautan ke ' + srcAbs + ']'));
+  return '';
+};
+
+C.chmod = (ctx) => {
+  const names = ctx.args.filter(a => !/^[0-7]{3,4}$/.test(a));
+  const modeStr = ctx.args[0];
+  if(!/^[0-7]{3,4}$/.test(modeStr)) return col('chmod: mode tidak valid: \'' + modeStr + '\'', 'red') + '\n';
+  const mode = parseInt(modeStr, 8);
+  for(const n of names){
+    const abs = VFS.resolve(n, ctx.cwd);
+    const node = VFS.get(abs);
+    if(node) node.m = mode;
+  }
+  VFS.save();
+  return '';
+};
+
+C.stat = (ctx) => {
+  if(!ctx.args.length) return col('stat: kekurangan operand', 'red') + '\n';
+  let out = '';
+  for(const n of ctx.args){
+    const abs = VFS.resolve(n, ctx.cwd);
+    const node = VFS.get(abs);
+    if(!node){ out += col('stat: tidak dapat stat \'' + n + '\': Tidak ada berkas', 'red') + '\n'; ctx.exit = 1; continue; }
+    out += '  File: ' + abs + '\n';
+    out += '  Size: ' + (node.t === 'f' ? node.c.length : 4096) + '\t\tBlok: 8\tIO Block: 4096 ' + (node.t === 'd' ? 'direktori' : 'berkas reguler') + '\n';
+    out += 'Device: 0,1\tInode: ' + (Math.abs(hash(abs)) % 100000) + '\tLinks: 1\n';
+    out += 'Akses: (' + node.m.toString(8).padStart(4,'0') + ')\tUid: (1000/user)\tGid: (1000/user)\n';
+    out += 'Modify: ' + new Date(node.mt).toISOString() + '\n';
+    out += '\n';
+  }
+  return out;
+};
+
+function hash(str){ let h = 0; for(let i = 0; i < str.length; i++){ h = ((h<<5)-h) + str.charCodeAt(i); h |= 0; } return h; }
+
+C.file = (ctx) => {
+  let out = '';
+  for(const n of ctx.args){
+    const abs = VFS.resolve(n, ctx.cwd);
+    const node = VFS.get(abs);
+    if(!node){ out += n + ': tidak dapat membuka (Tidak ada berkas)\n'; continue; }
+    if(node.t === 'd'){ out += n + ': direktori\n'; continue; }
+    const c = node.c;
+    let type = 'ASCII text';
+    if(/^#!.*python/.test(c)) type = 'Python script, ASCII text executable';
+    else if(/^#!/.test(c)) type = 'script, ASCII text executable';
+    else if(/^\{[\s\S]*\}$/.test(c.trim())) type = 'JSON data';
+    else if(/^\s*</.test(c)) type = 'HTML document';
+    else if(/^[0-9\s.]+$/.test(c)) type = 'ASCII text, numeric';
+    else if(!c) type = 'empty';
+    out += n + ': ' + type + '\n';
+  }
+  return out;
+};
+
+C.du = (ctx) => {
+  const human = ctx.args.includes('-h');
+  const names = ctx.args.filter(a => !a.startsWith('-'));
+  if(!names.length) names.push('.');
+  let out = '';
+  function size(abs){
+    const n = VFS.get(abs);
+    if(!n) return 0;
+    if(n.t === 'f') return n.c.length;
+    let s = 4096;
+    for(const k of Object.keys(n.c)) s += size(abs + '/' + k);
+    return s;
+  }
+  for(const p of names){
+    const abs = VFS.resolve(p, ctx.cwd);
+    const s = size(abs);
+    out += (human ? humanSize(s) : Math.ceil(s/1024)) + '\t' + p + '\n';
+  }
+  return out;
+};
+
+function humanSize(b){
+  if(b < 1024) return b + 'B';
+  if(b < 1024*1024) return (b/1024).toFixed(1) + 'K';
+  if(b < 1024*1024*1024) return (b/1024/1024).toFixed(1) + 'M';
+  return (b/1024/1024/1024).toFixed(1) + 'G';
+}
+
+C.df = (ctx) => {
+  const human = ctx.args.includes('-h');
+  return 'Filesystem      ' + (human?'Size  Used Avail Use% ':'1K-blocks    Used Available Use% ') + 'Mounted on\n' +
+         '/dev/root        ' + (human?'32G   12G   20G  38% ':'33554432 12582912 20971520  38% ') + '/\n' +
+         'tmpfs            ' + (human?'2.0G  120M  1.9G   6% ':'2097152   122880   1974272   6% ') + '/tmp\n' +
+         '/dev/sdcard1     ' + (human?'128G   64G   64G  50% ':'134217728 67108864 67108864  50% ') + '/storage\n';
+};
+
+C.tree = (ctx) => {
+  const root = ctx.args[0] || '.';
+  const abs = VFS.resolve(root, ctx.cwd);
+  const node = VFS.get(abs);
+  if(!node) return col('tree: ' + root + ': Tidak ada direktori', 'red') + '\n';
+  let dirs = 0, files = 0;
+  const out = [];
+  out.push(col(root, 'bblue'));
+  function walk(n, prefix){
+    const keys = Object.keys(n.c).filter(k => !k.startsWith('.'));
+    keys.sort();
+    keys.forEach((k, i) => {
+      const ch = n.c[k];
+      const last = i === keys.length - 1;
+      out.push(prefix + (last ? '└── ' : '├── ') + (ch.t === 'd' ? col(k, 'bblue') : k));
+      if(ch.t === 'd'){ dirs++; walk(ch, prefix + (last ? '    ' : '│   ')); }
+      else files++;
+    });
+  }
+  walk(node, '');
+  out.push('');
+  out.push(dirs + ' direktori, ' + files + ' berkas');
+  return out.join('\n') + '\n';
+};
+
+C.find = (ctx) => {
+  let start = '.';
+  let namePat = null;
+  let typeFilter = null;
+  for(let i = 0; i < ctx.args.length; i++){
+    if(ctx.args[i] === '-name') namePat = ctx.args[++i];
+    else if(ctx.args[i] === '-type') typeFilter = ctx.args[++i];
+    else if(!ctx.args[i].startsWith('-')) start = ctx.args[i];
+  }
+  const startAbs = VFS.resolve(start, ctx.cwd);
+  if(!VFS.exists(startAbs)) return col('find: \'' + start + '\': Tidak ada berkas', 'red') + '\n';
+  const results = [];
+  const re = namePat ? new RegExp('^' + namePat.replace(/[.+^${}()|[\]\\]/g,'\\$&').replace(/\*/g,'.*').replace(/\?/g,'.') + '$') : null;
+  function walk(abs){
+    const n = VFS.get(abs);
+    if(!n) return;
+    if(!re || re.test(VFS.basename(abs))){
+      if(!typeFilter || (typeFilter === 'f' && n.t === 'f') || (typeFilter === 'd' && n.t === 'd'))
+        results.push(abs);
+    }
+    if(n.t === 'd') for(const k of Object.keys(n.c)) walk(abs + '/' + k);
+  }
+  walk(startAbs);
+  return results.join('\n') + (results.length ? '\n' : '');
+};
+
+C.locate = C.find;
+
+C.realpath = (ctx) => {
+  if(!ctx.args.length) return col('realpath: kekurangan operand', 'red') + '\n';
+  return ctx.args.map(a => VFS.resolve(a, ctx.cwd)).join('\n') + '\n';
+};
+
+/* ---------- Teks ---------- */
+C.echo = (ctx) => {
+  const noNewline = ctx.args[0] === '-n';
+  const args = noNewline ? ctx.args.slice(1) : ctx.args;
+  const interpret = ctx.args[0] === '-e';
+  let text = (interpret ? args.slice(1) : args).join(' ');
+  if(interpret){
+    text = text.replace(/\\n/g,'\n').replace(/\\t/g,'\t').replace(/\\r/g,'\r').replace(/\\e/g,'\x1b');
+  }
+  return text + (noNewline ? '' : '\n');
+};
+
+C.printf = (ctx) => {
+  if(!ctx.args.length) return '';
+  const fmt = ctx.args[0];
+  const args = ctx.args.slice(1);
+  let idx = 0;
+  const out = fmt.replace(/%[sdif%]/g, m => {
+    if(m === '%%') return '%';
+    const a = args[idx++] ?? '';
+    if(m === '%d' || m === '%i') return String(parseInt(a) || 0);
+    if(m === '%f') return String(parseFloat(a) || 0);
+    return a;
+  }).replace(/\\n/g,'\n').replace(/\\t/g,'\t');
+  return out;
+};
+
+C.grep = (ctx) => {
+  const flags = new Set();
+  let pattern = null;
+  const files = [];
+  for(const a of ctx.args){
+    if(a.startsWith('-') && a.length > 1 && !pattern){
+      for(const c of a.slice(1)) flags.add(c);
+    } else if(pattern === null){
+      pattern = a;
+    } else files.push(a);
+  }
+  if(pattern === null) return col('Penggunaan: grep [OPSI] POLA [BERKAS...]', 'red') + '\n';
+  const ignoreCase = flags.has('i');
+  const invert = flags.has('v');
+  const lineNum = flags.has('n');
+  const countOnly = flags.has('c');
+  const wordOnly = flags.has('w');
+  let re;
+  try{
+    let p = pattern;
+    if(wordOnly) p = '\\b' + p + '\\b';
+    re = new RegExp(p, ignoreCase ? 'i' : '');
+  }catch(e){ return col('grep: pola tidak valid', 'red') + '\n'; }
+
+  let text = '';
+  let multi = files.length > 1;
+  if(!files.length){ text = ctx.stdin; }
+  else {
+    for(const f of files){
+      const abs = VFS.resolve(f, ctx.cwd);
+      const r = VFS.read(abs);
+      if(r.err){ if(!flags.has('s')) ctx.out.push(col('grep: ' + f + ': Tidak ada berkas', 'red') + '\n'); continue; }
+      text += r.content;
+    }
+  }
+  const lines = text.split('\n');
+  let out = '';
+  let count = 0;
+  lines.forEach((line, i) => {
+    const match = re.test(line);
+    if(match !== invert){
+      count++;
+      if(!countOnly){
+        let display = line;
+        /* Highlight match */
+        if(!invert && pattern){
+          try{ display = line.replace(re, m => '\x1b[1;31m' + m + '\x1b[0m'); }catch(e){}
+        }
+        if(lineNum) out += col(String(i+1), 'bgreen') + ':' + display + '\n';
+        else out += display + '\n';
+      }
+    }
+  });
+  if(countOnly) out = count + '\n';
+  if(!out && !countOnly) ctx.exit = 1;
+  return out;
+};
+
+C.sed = (ctx) => {
+  /* Support: s/foo/bar/[g], -n, p, d */
+  const noPrint = ctx.args.includes('-n');
+  let script = null;
+  let file = null;
+  for(const a of ctx.args){
+    if(a === '-n' || a === '-e' || a === '-i') continue;
+    if(script === null) script = a;
+    else file = a;
+  }
+  if(!script) return col('sed: skrip diperlukan', 'red') + '\n';
+  let text = '';
+  if(file){ const r = VFS.read(VFS.resolve(file, ctx.cwd)); if(r.err) return col('sed: ' + file + ': Tidak ada berkas', 'red') + '\n'; text = r.content; }
+  else text = ctx.stdin;
+
+  const lines = text.split('\n');
+  const m = script.match(/^s(.)(.*?)\1(.*?)\1([gi]*)$/);
+  const d = script.match(/^(\d+)?(,(\d+))?d$/);
+  const p = script.match(/^(\d+)?(,(\d+))?p$/);
+
+  if(m){
+    const [, , pat, rep, flags] = m;
+    try{
+      const re = new RegExp(pat, flags.includes('g') ? 'gi' : 'i');
+      return lines.map(l => l.replace(re, rep)).join('\n') + '\n';
+    }catch(e){ return col('sed: regex tidak valid', 'red') + '\n'; }
+  }
+  if(d){
+    const start = parseInt(d[1]) || 1;
+    const end = parseInt(d[3]) || start;
+    return lines.filter((_, i) => i+1 < start || i+1 > end).join('\n') + '\n';
+  }
+  if(p){
+    const start = parseInt(p[1]) || 1;
+    const end = parseInt(p[3]) || start;
+    return lines.slice(start-1, end).join('\n') + '\n';
+  }
+  return text;
+};
+
+C.awk = (ctx) => {
+  /* Basic awk: {print $1} , -F separator */
+  let fs = /\s+/;
+  let script = null;
+  let file = null;
+  for(let i = 0; i < ctx.args.length; i++){
+    const a = ctx.args[i];
+    if(a === '-F') fs = ctx.args[++i];
+    else if(script === null) script = a;
+    else file = a;
+  }
+  if(!script) return col('awk: diperlukan skrip', 'red') + '\n';
+  let text = file ? (VFS.read(VFS.resolve(file, ctx.cwd)).content || '') : ctx.stdin;
+  const lines = text.split('\n').filter(l => l !== '');
+  const out = [];
+  const printMatch = script.match(/^\{?\s*print\s+(.+?)\s*\}?$/);
+  if(printMatch){
+    const expr = printMatch[1].trim();
+    for(const line of lines){
+      const parts = line.split(fs);
+      const fields = [line, ...parts];
+      const val = expr.replace(/\$(\d+)/g, (_, n) => fields[parseInt(n)] || '');
+      const cleaned = val.replace(/"([^"]*)"/g, '$1').replace(/\s+/g, ' ').trim();
+      out.push(cleaned);
+    }
+    return out.join('\n') + (out.length ? '\n' : '');
+  }
+  return text;
+};
+
+C.sort = (ctx) => {
+  const numeric = ctx.args.includes('-n');
+  const reverse = ctx.args.includes('-r');
+  const unique = ctx.args.includes('-u');
+  const files = ctx.args.filter(a => !a.startsWith('-'));
+  let text = files.length ? files.map(f => (VFS.read(VFS.resolve(f, ctx.cwd)).content || '')).join('') : ctx.stdin;
+  let lines = text.split('\n');
+  if(lines[lines.length-1] === '') lines.pop();
+  lines.sort((a, b) => numeric ? (parseFloat(a) - parseFloat(b)) : a.localeCompare(b));
+  if(reverse) lines.reverse();
+  if(unique) lines = [...new Set(lines)];
+  return lines.join('\n') + (lines.length ? '\n' : '');
+};
+
+C.uniq = (ctx) => {
+  const count = ctx.args.includes('-c');
+  const lines = (ctx.stdin || '').split('\n').filter((_, i, a) => i < a.length - 1 || a[i] !== '');
+  let out = [];
+  let prev = null, n = 0;
+  for(const l of lines){
+    if(l === prev) n++;
+    else {
+      if(prev !== null) out.push(count ? String(n).padStart(7) + ' ' + prev : prev);
+      prev = l; n = 1;
+    }
+  }
+  if(prev !== null) out.push(count ? String(n).padStart(7) + ' ' + prev : prev);
+  return out.join('\n') + (out.length ? '\n' : '');
+};
+
+C.head = (ctx) => {
+  let n = 10;
+  let file = null;
+  for(let i = 0; i < ctx.args.length; i++){
+    if(ctx.args[i] === '-n') n = parseInt(ctx.args[++i]) || 10;
+    else if(/^-\d+$/.test(ctx.args[i])) n = parseInt(ctx.args[i].slice(1));
+    else if(!ctx.args[i].startsWith('-')) file = ctx.args[i];
+  }
+  let text = file ? (VFS.read(VFS.resolve(file, ctx.cwd)).content || '') : ctx.stdin;
+  const lines = text.split('\n');
+  if(lines[lines.length-1] === '') lines.pop();
+  return lines.slice(0, n).join('\n') + '\n';
+};
+
+C.tail = (ctx) => {
+  let n = 10;
+  let file = null;
+  for(let i = 0; i < ctx.args.length; i++){
+    if(ctx.args[i] === '-n') n = parseInt(ctx.args[++i]) || 10;
+    else if(/^-\d+$/.test(ctx.args[i])) n = parseInt(ctx.args[i].slice(1));
+    else if(!ctx.args[i].startsWith('-')) file = ctx.args[i];
+  }
+  let text = file ? (VFS.read(VFS.resolve(file, ctx.cwd)).content || '') : ctx.stdin;
+  const lines = text.split('\n');
+  if(lines[lines.length-1] === '') lines.pop();
+  return lines.slice(-n).join('\n') + '\n';
+};
+
+C.wc = (ctx) => {
+  const flags = ctx.args.filter(a => a.startsWith('-'));
+  const files = ctx.args.filter(a => !a.startsWith('-'));
+  const wantLines = !flags.length || flags.some(f => f.includes('l'));
+  const wantWords = !flags.length || flags.some(f => f.includes('w'));
+  const wantChars = !flags.length || flags.some(f => f.includes('c'));
+  const outputs = [];
+  const sources = files.length ? files.map(f => ({ name:f, text:(VFS.read(VFS.resolve(f, ctx.cwd)).content || '') }))
+                               : [{ name:null, text:ctx.stdin }];
+  let totalL = 0, totalW = 0, totalC = 0;
+  for(const s of sources){
+    const lines = (s.text.match(/\n/g) || []).length;
+    const words = s.text.split(/\s+/).filter(Boolean).length;
+    const chars = s.text.length;
+    totalL += lines; totalW += words; totalC += chars;
+    const parts = [];
+    if(wantLines) parts.push(String(lines).padStart(7));
+    if(wantWords) parts.push(String(words).padStart(7));
+    if(wantChars) parts.push(String(chars).padStart(7));
+    if(s.name) parts.push(s.name);
+    outputs.push(parts.join(' '));
+  }
+  if(files.length > 1){
+    const parts = [];
+    if(wantLines) parts.push(String(totalL).padStart(7));
+    if(wantWords) parts.push(String(totalW).padStart(7));
+    if(wantChars) parts.push(String(totalC).padStart(7));
+    parts.push('total');
+    outputs.push(parts.join(' '));
+  }
+  return outputs.join('\n') + '\n';
+};
+
+C.cut = (ctx) => {
+  let delim = '\t';
+  let fields = null;
+  let file = null;
+  for(let i = 0; i < ctx.args.length; i++){
+    const a = ctx.args[i];
+    if(a === '-d') delim = ctx.args[++i];
+    else if(a === '-f') fields = ctx.args[++i];
+    else if(!a.startsWith('-')) file = a;
+  }
+  if(!fields) return col('cut: perlu menentukan -f', 'red') + '\n';
+  const text = file ? (VFS.read(VFS.resolve(file, ctx.cwd)).content || '') : ctx.stdin;
+  const idxs = fields.split(',').map(f => parseInt(f) - 1);
+  return text.split('\n').map(line => idxs.map(i => line.split(delim)[i] || '').join(delim)).join('\n');
+};
+
+C.tr = (ctx) => {
+  const [from, to] = ctx.args;
+  if(!from) return ctx.stdin;
+  let out = '';
+  const map = {};
+  for(let i = 0; i < from.length; i++) map[from[i]] = to ? to[i] : '';
+  for(const ch of ctx.stdin) out += map[ch] !== undefined ? map[ch] : ch;
+  return out;
+};
+
+C.rev = (ctx) => {
+  const file = ctx.args[0];
+  const text = file ? (VFS.read(VFS.resolve(file, ctx.cwd)).content || '') : ctx.stdin;
+  return text.split('\n').map(l => l.split('').reverse().join('')).join('\n');
+};
+
+C.tac = (ctx) => {
+  const file = ctx.args[0];
+  const text = file ? (VFS.read(VFS.resolve(file, ctx.cwd)).content || '') : ctx.stdin;
+  const lines = text.split('\n');
+  if(lines[lines.length-1] === '') lines.pop();
+  return lines.reverse().join('\n') + '\n';
+};
+
+C.base64 = (ctx) => {
+  const decode = ctx.args.includes('-d') || ctx.args.includes('--decode');
+  const file = ctx.args.find(a => !a.startsWith('-'));
+  let text = file ? (VFS.read(VFS.resolve(file, ctx.cwd)).content || '') : ctx.stdin;
+  try{
+    if(decode) return atob(text.trim());
+    return btoa(unescape(encodeURIComponent(text))) + '\n';
+  }catch(e){ return col('base64: masukan tidak valid', 'red') + '\n'; }
+};
+
+C.md5sum = (ctx) => {
+  const files = ctx.args.filter(a => !a.startsWith('-'));
+  const sources = files.length ? files.map(f => ({ n:f, t:(VFS.read(VFS.resolve(f, ctx.cwd)).content || '') })) : [{ n:'-', t:ctx.stdin }];
+  return sources.map(s => md5(s.t) + '  ' + s.n).join('\n') + '\n';
+};
+
+C.sha256sum = (ctx) => {
+  const files = ctx.args.filter(a => !a.startsWith('-'));
+  const sources = files.length ? files.map(f => ({ n:f, t:(VFS.read(VFS.resolve(f, ctx.cwd)).content || '') })) : [{ n:'-', t:ctx.stdin }];
+  return sources.map(s => sha256(s.t) + '  ' + s.n).join('\n') + '\n';
+};
+
+function md5(str){
+  /* Simple deterministic hash for display */
+  let h1 = 0x12345678, h2 = 0x9abcdef0, h3 = 0xdeadbeef, h4 = 0x13371337;
+  for(let i = 0; i < str.length; i++){
+    const c = str.charCodeAt(i);
+    h1 = (h1 + c) * 2654435761 | 0;
+    h2 = (h2 ^ c) * 40503 | 0;
+    h3 = (h3 + (c << 3)) * 2246822519 | 0;
+    h4 = (h4 ^ (c << 1)) * 3266489917 | 0;
+  }
+  const hex = n => (n >>> 0).toString(16).padStart(8, '0');
+  return hex(h1) + hex(h2) + hex(h3) + hex(h4);
+}
+function sha256(str){
+  return md5(str) + md5(str + 'salt1') + md5('salt2' + str) + md5(str + str.length);
+}
+
+/* ---------- Sistem ---------- */
+C.date = (ctx) => {
+  const d = new Date();
+  const days = ['Min','Sen','Sel','Rab','Kam','Jum','Sab'];
+  const months = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+  return days[d.getDay()] + ' ' + months[d.getMonth()] + ' ' + String(d.getDate()).padStart(2,' ') +
+         ' ' + d.toTimeString().slice(0,8) + ' WIB ' + d.getFullYear() + '\n';
+};
+
+C.uptime = (ctx) => {
+  const up = (performance.now() / 1000) | 0;
+  const h = (up/3600)|0, m = ((up%3600)/60)|0, s = up%60;
+  return ' ' + new Date().toTimeString().slice(0,8) + ' up ' + h + ':' + String(m).padStart(2,'0') +
+         ', 1 user, load average: 0.15, 0.22, 0.18\n';
+};
+
+C.whoami = (ctx) => ctx.env.USER + '\n';
+C.id = (ctx) => 'uid=1000(' + ctx.env.USER + ') gid=1000(' + ctx.env.USER + ') groups=1000(' + ctx.env.USER + ')\n';
+C.who = (ctx) => ctx.env.USER + '   pts/0        2025-01-01 00:00 (localhost)\n';
+C.groups = (ctx) => ctx.env.USER + '\n';
+C.hostname = (ctx) => 'weblinux\n';
+C.uname = (ctx) => {
+  const a = ctx.args.join(' ');
+  if(a.includes('-a')) return 'Linux weblinux 6.1.0-weblinux #1 SMP PREEMPT wasm aarch64 GNU/Linux\n';
+  if(a.includes('-r')) return '6.1.0-weblinux\n';
+  if(a.includes('-m')) return 'aarch64\n';
+  if(a.includes('-n')) return 'weblinux\n';
+  return 'Linux\n';
+};
+C.arch = (ctx) => 'aarch64\n';
+
+C.env = (ctx) => Object.keys(ctx.env).sort().map(k => k + '=' + ctx.env[k]).join('\n') + '\n';
+C.printenv = (ctx) => ctx.env[ctx.args[0]] ? ctx.env[ctx.args[0]] + '\n' : '';
+
+C.export = (ctx) => {
+  for(const a of ctx.args){
+    const i = a.indexOf('=');
+    if(i > 0){
+      const k = a.slice(0, i), v = a.slice(i+1);
+      ctx.env[k] = v;
+    }
+  }
+  return '';
+};
+C.unset = (ctx) => { for(const k of ctx.args) delete ctx.env[k]; return ''; };
+C.set = (ctx) => Object.keys(ctx.env).sort().map(k => k + '=' + ctx.env[k]).join('\n') + '\n';
+
+C.alias = (ctx) => {
+  if(!ctx.args.length){
+    return Object.keys(ctx.shell.aliases).sort().map(k => 'alias ' + k + '=\'' + ctx.shell.aliases[k] + '\'').join('\n') + '\n';
+  }
+  for(const a of ctx.args){
+    const i = a.indexOf('=');
+    if(i > 0) ctx.shell.aliases[a.slice(0, i)] = a.slice(i+1).replace(/^['"]|['"]$/g,'');
+  }
+  return '';
+};
+C.unalias = (ctx) => { for(const k of ctx.args) delete ctx.shell.aliases[k]; return ''; };
+
+C.history = (ctx) => ctx.shell.history.map((h, i) => String(i+1).padStart(5) + '  ' + h).join('\n') + '\n';
+C.clear = (ctx) => { if(ctx.term && ctx.term.clear) ctx.term.clear(); return '\x1b[2J\x1b[H'; };
+C.exit = (ctx) => { return { stdout:'', exit:0, _exit:true }; };
+C.logout = C.exit;
+C.true = () => '';
+C.false = () => ({ stdout:'', exit:1 });
+
+C.ps = (ctx) => {
+  return '  PID TTY          TIME CMD\n' +
+         '    1 pts/0    00:00:01 init\n' +
+         '  142 pts/0    00:00:00 bash\n' +
+         '  215 pts/0    00:00:00 ps\n';
+};
+
+C.top = C.ps;
+C.htop = C.ps;
+
+C.kill = (ctx) => {
+  if(!ctx.args.length) return col('kill: penggunaan: kill PID', 'red') + '\n';
+  return '';
+};
+
+C.free = (ctx) => {
+  const h = ctx.args.includes('-h');
+  if(h) return '              total        used        free      shared  buff/cache   available\n' +
+                'Mem:           3.9Gi       1.4Gi       1.2Gi        65Mi       1.3Gi       2.2Gi\n' +
+                'Swap:          2.0Gi          0B       2.0Gi\n';
+  return '              total        used        free      shared  buff/cache   available\n' +
+         'Mem:        4096000     1468000     1258000       66560     1372000     2304000\n' +
+         'Swap:       2097152           0     2097152\n';
+};
+
+C.neofetch = (ctx) => {
+  const c = ctx.shell.colorize.bind(ctx.shell);
+  const user = ctx.env.USER;
+  const apps = window.__STATE__ ? window.__STATE__.installed.length : 0;
+  const up = (performance.now()/1000/60)|0;
+  const L = [];
+  L.push(c('        .--.        ', 'bblue') + '  ' + c(user + '@weblinux', 'bgreen'));
+  L.push(c('       |o_o |       ', 'bblue') + '  ' + '-----------------');
+  L.push(c('       |:_/ |       ', 'bblue') + '  ' + c('OS', 'bcyan') + ': WebLinux 2.0 Pro aarch64');
+  L.push(c('      //   \\ \\      ', 'bblue') + '  ' + c('Kernel', 'bcyan') + ': 6.1.0-weblinux');
+  L.push(c('     (|     | )     ', 'bblue') + '  ' + c('Uptime', 'bcyan') + ': ' + up + ' menit');
+  L.push(c("    /'\\_   _/`\\     ", 'bblue') + '  ' + c('Shell', 'bcyan') + ': wsh 2.0');
+  L.push(c('    \\___)=(___/     ', 'bblue') + '  ' + c('DE', 'bcyan') + ': WebDesktop');
+  L.push(c('                    ', 'bblue') + '  ' + c('Terminal', 'bcyan') + ': web-term');
+  L.push(c('                    ', 'bblue') + '  ' + c('CPU', 'bcyan') + ': ' + (navigator.hardwareConcurrency||4) + ' core (WASM)');
+  L.push(c('                    ', 'bblue') + '  ' + c('Memory', 'bcyan') + ': ' + (navigator.deviceMemory||'?') + ' GB');
+  L.push(c('                    ', 'bblue') + '  ' + c('Resolusi', 'bcyan') + ': ' + window.innerWidth + 'x' + window.innerHeight);
+  L.push(c('                    ', 'bblue') + '  ' + c('Aplikasi', 'bcyan') + ': ' + apps + ' terinstal');
+  L.push('');
+  L.push('  ' + '\x1b[40m   \x1b[41m   \x1b[42m   \x1b[43m   \x1b[44m   \x1b[45m   \x1b[46m   \x1b[47m   \x1b[0m');
+  L.push('');
+  return L.join('\n');
+};
+
+C.screenfetch = C.neofetch;
+
+C.cal = (ctx) => {
+  const d = new Date();
+  const y = d.getFullYear(), m = d.getMonth();
+  const months = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+  const first = new Date(y, m, 1).getDay();
+  const days = new Date(y, m+1, 0).getDate();
+  const L = ['    ' + months[m] + ' ' + y, 'Min Sen Sel Rab Kam Jum Sab'];
+  let row = '    '.repeat(first);
+  for(let i = 1; i <= days; i++){
+    row += String(i).padStart(3) + ' ';
+    if((i + first) % 7 === 0){ L.push(row); row = ''; }
+  }
+  if(row) L.push(row);
+  return L.join('\n') + '\n';
+};
+
+C.sleep = (ctx) => {
+  const secs = parseFloat(ctx.args[0]) || 0;
+  return new Promise(res => setTimeout(() => res(''), Math.min(secs * 1000, 10000)));
+};
+
+C.time = async (ctx) => {
+  const start = performance.now();
+  const cmd = ctx.args.join(' ');
+  const out = await ctx.shell.subshell(cmd);
+  const end = performance.now();
+  return out + '\nreal\t' + ((end-start)/1000).toFixed(3) + 's\nuser\t0.000s\nsys\t0.000s\n';
+};
+
+C.reboot = (ctx) => {
+  setTimeout(() => location.reload(), 800);
+  return col('Menyiarkan siaran siaga... Sistem akan dimulai ulang.', 'byellow') + '\n';
+};
+C.shutdown = C.reboot;
+
+/* ---------- Jaringan ---------- */
+C.curl = async (ctx) => {
+  const url = ctx.args.find(a => a.startsWith('http') || a.includes('.'));
+  if(!url) return col('curl: coba \'curl --help\' untuk info lebih lanjut', 'red') + '\n';
+  let target = url.startsWith('http') ? url : 'https://' + url;
+  const loading = document.getElementById('loading');
+  const ltxt = document.getElementById('ltxt');
+  if(loading){ loading.classList.add('on'); ltxt.textContent = 'curl: ' + target; }
+  try{
+    const r = await fetch(target);
+    const t = await r.text();
+    if(loading){ loading.classList.remove('on'); }
+    if(ctx.args.includes('-I')){
+      return 'HTTP/1.1 ' + r.status + ' ' + r.statusText + '\n' +
+             [...r.headers.entries()].map(([k,v]) => k + ': ' + v).join('\n') + '\n';
+    }
+    return t.slice(0, 20000) + (t.length > 20000 ? '\n[...terpotong...]\n' : '');
+  }catch(e){
+    if(loading) loading.classList.remove('on');
+    return col('curl: (6) Tidak dapat menyelesaikan host: ' + target, 'red') + '\n';
+  }
+};
+
+C.wget = async (ctx) => {
+  const url = ctx.args.find(a => a.startsWith('http') || a.includes('.'));
+  if(!url) return col('wget: URL tidak diberikan', 'red') + '\n';
+  const target = url.startsWith('http') ? url : 'https://' + url;
+  const loading = document.getElementById('loading');
+  const ltxt = document.getElementById('ltxt');
+  if(loading){ loading.classList.add('on'); ltxt.textContent = 'wget: ' + target; }
+  try{
+    const r = await fetch(target);
+    const t = await r.text();
+    if(loading) loading.classList.remove('on');
+    const name = VFS.basename(target) || 'index.html';
+    VFS.write(VFS.resolve(name, ctx.cwd), t);
+    return 'Menyimpan ke: \'' + name + '\' ... selesai (' + t.length + ' byte)\n';
+  }catch(e){
+    if(loading) loading.classList.remove('on');
+    return col('wget: Tidak dapat mengunduh: ' + target, 'red') + '\n';
+  }
+};
+
+C.ping = async (ctx) => {
+  const host = ctx.args[0];
+  if(!host) return col('ping: penggunaan: ping <host>', 'red') + '\n';
+  let out = 'PING ' + host + ' (127.0.0.1) 56(84) bytes of data.\n';
+  const t0 = performance.now();
+  try{
+    await fetch('https://' + host.replace(/^https?:\/\//, ''), { method:'HEAD', mode:'no-cors' });
+  }catch(e){}
+  const dt = Math.round(performance.now() - t0);
+  for(let i = 1; i <= 4; i++){
+    out += '64 bytes dari ' + host + ': icmp_seq=' + i + ' ttl=56 waktu=' + (dt + Math.round(Math.random()*10-5)) + ' ms\n';
+  }
+  out += '\n--- ' + host + ' statistik ping ---\n';
+  out += '4 paket dikirim, 4 diterima, 0% packet loss\n';
+  return out;
+};
+
+C.ifconfig = (ctx) => {
+  return 'eth0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500\n' +
+         '        inet 192.168.1.' + (100 + Math.floor(Math.random()*50)) + '  netmask 255.255.255.0  broadcast 192.168.1.255\n' +
+         '        inet6 fe80::1  prefixlen 64  scopeid 0x20<link>\n' +
+         '        ether 02:42:ac:11:00:02  txqueuelen 1000  (Ethernet)\n' +
+         '        RX packets 1234  bytes 567890 (554.5 KiB)\n' +
+         '        TX packets 987  bytes 123456 (120.5 KiB)\n' +
+         '\n' +
+         'lo: flags=73<UP,LOOPBACK,RUNNING>  mtu 65536\n' +
+         '        inet 127.0.0.1  netmask 255.0.0.0\n' +
+         '        inet6 ::1  prefixlen 128  scopeid 0x10<host>\n';
+};
+C.ip = C.ifconfig;
+C.netstat = (ctx) => 'Proto Recv-Q Send-Q Local Address           Foreign Address         State\ntcp        0      0 0.0.0.0:80              0.0.0.0:*               LISTEN\n';
+
+/* ---------- Pemrograman ---------- */
+C.python = async (ctx) => runPython(ctx);
+C.python3 = C.python;
+
+async function ensurePyodide(){
+  if(window.__pyodide) return window.__pyodide;
+  if(window.__pyodideLoading) return await window.__pyodideLoading;
+  window.__pyodideLoading = (async () => {
+    if(!window.loadPyodide){
+      await new Promise((res, rej) => {
+        const s = document.createElement('script');
+        s.src = 'https://cdn.jsdelivr.net/pyodide/v0.26.2/full/pyodide.js';
+        s.onload = res; s.onerror = rej;
+        document.head.appendChild(s);
+      });
+    }
+    const py = await window.loadPyodide({
+      indexURL: 'https://cdn.jsdelivr.net/pyodide/v0.26.2/full/'
+    });
+    /* Pasang fungsi jembatan VFS */
+    py.registerJsModule('webfs', {
+      list: (p) => { const abs = VFS.resolve(p, '/home/user'); return VFS.list(abs).entries?.map(e => e.n) || []; },
+      read: (p) => { const abs = VFS.resolve(p, '/home/user'); return VFS.read(abs).content ?? null; },
+      write: (p, c) => { const abs = VFS.resolve(p, '/home/user'); VFS.write(abs, c); return true; },
+      exists: (p) => VFS.exists(VFS.resolve(p, '/home/user'))
+    });
+    window.__pyodide = py;
+    return py;
+  })();
+  return await window.__pyodideLoading;
+}
+
+async function runPython(ctx){
+  const loading = document.getElementById('loading');
+  const ltxt = document.getElementById('ltxt');
+  const firstTime = !window.__pyodide;
+  if(loading){
+    loading.classList.add('on');
+    ltxt.textContent = firstTime ? 'Mengunduh Python 3 (Pyodide ~12 MB)...' : 'Menjalankan Python...';
+  }
+  let py;
+  try{ py = await ensurePyodide(); }
+  catch(e){
+    if(loading) loading.classList.remove('on');
+    return col('python: gagal memuat Pyodide: ' + e.message, 'red') + '\n';
+  }
+  if(loading) loading.classList.remove('on');
+
+  const file = ctx.args.find(a => !a.startsWith('-'));
+  let code;
+  if(file){
+    const r = VFS.read(VFS.resolve(file, ctx.cwd));
+    if(r.err) return col('python: tidak dapat membuka \'' + file + '\': Tidak ada berkas', 'red') + '\n';
+    code = r.content;
+  } else if(ctx.stdin){
+    code = ctx.stdin;
+  } else {
+    /* Interactive REPL */
+    return openPythonREPL();
+  }
+
+  let out = '';
+  py.setStdout({ batched: s => { out += s + '\n'; } });
+  py.setStderr({ batched: s => { out += col(s, 'red') + '\n'; } });
+  try{
+    await py.runPythonAsync(code);
+  }catch(e){
+    out += col(e.message || String(e), 'red') + '\n';
+  }
+  return out;
+}
+
+C.pip = async (ctx) => {
+  const sub = ctx.args[0];
+  const pkg = ctx.args[1];
+  if(sub === 'install' || sub === 'add'){
+    if(!pkg) return col('pip: paket diperlukan', 'red') + '\n';
+    const loading = document.getElementById('loading');
+    const ltxt = document.getElementById('ltxt');
+    if(loading){ loading.classList.add('on'); ltxt.textContent = 'pip: mengunduh ' + pkg + '...'; }
+    try{
+      const py = await ensurePyodide();
+      await py.loadPackage(pkg, { messageCallback: () => {} });
+      if(loading) loading.classList.remove('on');
+      return 'Berhasil menginstal ' + pkg + ' dari PyPI\n';
+    }catch(e){
+      if(loading) loading.classList.remove('on');
+      return col('ERROR: Tidak dapat menemukan versi yang memenuhi persyaratan ' + pkg, 'red') + '\n';
+    }
+  }
+  if(sub === 'list'){
+    return 'Package    Version\n---------- -------\nnumpy      1.x\nmicropip   0.6.0\n';
+  }
+  if(sub === 'uninstall' || sub === 'remove'){
+    return 'Berhasil menghapus ' + pkg + '\n';
+  }
+  return col('pip: perintah \'' + (sub||'') + '\' tidak dikenal', 'red') + '\n';
+};
+
+function openPythonREPL(){
+  openApp('python');
+  return '';
+}
+
+C.node = C.js = async (ctx) => {
+  const file = ctx.args.find(a => !a.startsWith('-'));
+  let code;
+  if(file){
+    const r = VFS.read(VFS.resolve(file, ctx.cwd));
+    if(r.err) return col('node: tidak dapat menemukan modul \'' + file + '\'', 'red') + '\n';
+    code = r.content;
+  } else if(ctx.stdin){
+    code = ctx.stdin;
+  } else {
+    openApp('nodejs');
+    return '';
+  }
+  return runJS(code);
+};
+
+function runJS(code){
+  const logs = [];
+  const fakeConsole = {
+    log: (...a) => logs.push(a.map(fmt).join(' ')),
+    error: (...a) => logs.push(col(a.map(fmt).join(' '), 'red')),
+    warn: (...a) => logs.push(col(a.map(fmt).join(' '), 'yellow')),
+    info: (...a) => logs.push(a.map(fmt).join(' '))
+  };
+  function fmt(x){
+    if(typeof x === 'object') try{ return JSON.stringify(x, null, 2); }catch(e){ return String(x); }
+    return String(x);
+  }
+  try{
+    const fn = new Function('console', 'require', code);
+    fn(fakeConsole, (m) => { throw new Error('require("' + m + '") tidak tersedia'); });
+    return logs.join('\n') + (logs.length ? '\n' : '');
+  }catch(e){
+    return col(e.message, 'red') + '\n';
+  }
+}
+
+C.bc = (ctx) => {
+  const expr = ctx.args.join(' ');
+  if(!expr) return '';
+  try{
+    const r = new Function('return (' + expr.replace(/[^0-9+\-*/%(). <>=!&|?:]/g,' ') + ')')();
+    return String(Math.round(r * 1e10) / 1e10) + '\n';
+  }catch(e){ return col('bc: error sintaks', 'red') + '\n'; }
+};
+
+C.expr = (ctx) => {
+  try{
+    const r = new Function('return (' + ctx.args.join(' ').replace(/[^0-9+\-*/%(). ]/g,'') + ')')();
+    return String(r) + '\n';
+  }catch(e){ return col('expr: error', 'red') + '\n'; }
+};
+
+C.seq = (ctx) => {
+  let a = 1, b = 1, step = 1;
+  if(ctx.args.length === 1){ b = parseInt(ctx.args[0]); }
+  else if(ctx.args.length === 2){ a = parseInt(ctx.args[0]); b = parseInt(ctx.args[1]); }
+  else if(ctx.args.length === 3){ a = parseInt(ctx.args[0]); step = parseInt(ctx.args[1]); b = parseInt(ctx.args[2]); }
+  const out = [];
+  if(step > 0) for(let i = a; i <= b; i += step) out.push(i);
+  else for(let i = a; i >= b; i += step) out.push(i);
+  return out.join('\n') + (out.length ? '\n' : '');
+};
+
+C.factor = (ctx) => {
+  const n = parseInt(ctx.args[0]);
+  if(!n) return col('factor: argumen tidak valid', 'red') + '\n';
+  const fs = [];
+  let x = Math.abs(n);
+  for(let i = 2; i * i <= x; i++){ while(x % i === 0){ fs.push(i); x /= i; } }
+  if(x > 1) fs.push(x);
+  return n + ': ' + (fs.length ? fs.join(' ') : n) + '\n';
+};
+
+/* ---------- Arsip (simple) ---------- */
+C.tar = (ctx) => {
+  /* tar -cf archive.tar file... */
+  const create = ctx.args.includes('-cf') || ctx.args.some(a => a.startsWith('-c'));
+  const extract = ctx.args.includes('-xf') || ctx.args.some(a => a.startsWith('-x'));
+  let archive = null;
+  const files = [];
+  for(let i = 0; i < ctx.args.length; i++){
+    if(ctx.args[i] === '-cf' || ctx.args[i] === '-xf'){ archive = ctx.args[++i]; continue; }
+    if(ctx.args[i].startsWith('-')) continue;
+    if(!archive){ archive = ctx.args[i]; continue; }
+    files.push(ctx.args[i]);
+  }
+  if(create){
+    if(!archive || !files.length) return col('tar: penggunaan: tar -cf arsip.tar berkas...', 'red') + '\n';
+    const data = { files:{} };
+    for(const f of files){
+      const abs = VFS.resolve(f, ctx.cwd);
+      const r = VFS.read(abs);
+      if(!r.err) data.files[f] = r.content;
+    }
+    VFS.write(VFS.resolve(archive, ctx.cwd), JSON.stringify(data));
+    return '';
+  }
+  if(extract){
+    const r = VFS.read(VFS.resolve(archive, ctx.cwd));
+    if(r.err) return col('tar: ' + archive + ': Tidak dapat membuka', 'red') + '\n';
+    try{
+      const data = JSON.parse(r.content);
+      for(const [n, c] of Object.entries(data.files)) VFS.write(VFS.resolve(n, ctx.cwd), c);
+      return '';
+    }catch(e){ return col('tar: arsip tidak valid', 'red') + '\n'; }
+  }
+  return '';
+};
+
+C.gzip = (ctx) => {
+  const f = ctx.args[0];
+  if(!f) return col('gzip: kekurangan operand', 'red') + '\n';
+  const r = VFS.read(VFS.resolve(f, ctx.cwd));
+  if(r.err) return col('gzip: ' + f + ': Tidak ada berkas', 'red') + '\n';
+  VFS.write(VFS.resolve(f + '.gz', ctx.cwd), btoa(r.content));
+  VFS.remove(VFS.resolve(f, ctx.cwd));
+  return '';
+};
+
+C.gunzip = (ctx) => {
+  const f = ctx.args[0];
+  if(!f) return col('gunzip: kekurangan operand', 'red') + '\n';
+  const r = VFS.read(VFS.resolve(f, ctx.cwd));
+  if(r.err) return col('gunzip: ' + f + ': Tidak ada berkas', 'red') + '\n';
+  try{
+    VFS.write(VFS.resolve(f.replace(/\.gz$/, ''), ctx.cwd), atob(r.content));
+    VFS.remove(VFS.resolve(f, ctx.cwd));
+  }catch(e){ return col('gunzip: berkas tidak valid', 'red') + '\n'; }
+  return '';
+};
+
+/* ---------- Apt / paket manager ---------- */
+C.apt = C['apt-get'] = C.pacman = async (ctx) => {
+  const sub = ctx.args[0];
+  const pkgs = ctx.args.slice(1);
+  const pm = window.__PKGMGR__;
+
+  if(sub === 'update'){
+    return 'Get:1 http://repo.weblinux.org stable InRelease [12.4 kB]\n' +
+           'Get:2 http://repo.weblinux.org stable/main aarch64 Packages [45.2 kB]\n' +
+           'Membaca daftar paket... Selesai\n' +
+           'Membangun pohon dependensi... Selesai\n' +
+           'Semua paket sudah diperbarui.\n';
+  }
+  if(sub === 'upgrade'){
+    return 'Menghitung pembaruan... Selesai\n0 diperbarui, 0 baru dipasang, 0 dihapus.\n';
+  }
+  if(sub === 'install' || sub === '-S'){
+    if(!pkgs.length) return col('E: Argumen paket diperlukan', 'red') + '\n';
+    return await pm.install(pkgs, ctx);
+  }
+  if(sub === 'remove' || sub === 'uninstall' || sub === 'purge' || sub === '-R'){
+    if(!pkgs.length) return col('E: Argumen paket diperlukan', 'red') + '\n';
+    return pm.remove(pkgs, ctx);
+  }
+  if(sub === 'list'){
+    if(pkgs[0] === '--installed' || pkgs[0] === '-I'){
+      return pm.listInstalled();
+    }
+    return pm.listAvailable();
+  }
+  if(sub === 'search'){
+    return pm.search(pkgs[0] || '');
+  }
+  if(sub === 'show'){
+    return pm.show(pkgs[0]);
+  }
+  return col('E: Perintah \'' + (sub||'') + '\' tidak dikenal', 'red') + '\n';
+};
+
+/* ---------- Hiburan ---------- */
+C.cowsay = (ctx) => {
+  const text = ctx.args.join(' ') || 'Halo Linux!';
+  const w = Math.max(text.length, 2);
+  const top = ' ' + '_'.repeat(w + 2);
+  const bot = ' ' + '-'.repeat(w + 2);
+  return top + '\n< ' + text + ' >\n' + bot + '\n' +
+         '        \\   ^__^\n' +
+         '         \\  (oo)\\_______\n' +
+         '            (__)\\       )\\/\\\n' +
+         '                ||----w |\n' +
+         '                ||     ||\n';
+};
+
+C.figlet = (ctx) => {
+  const text = (ctx.args.join(' ') || 'LINUX').toUpperCase();
+  const font = {
+    'A':[' █████ ','██   ██','███████','██   ██','██   ██'],
+    'B':['██████ ','██   ██','██████ ','██   ██','██████ '],
+    'C':[' ██████','██     ','██     ','██     ',' ██████'],
+    'D':['██████ ','██   ██','██   ██','██   ██','██████ '],
+    'E':['███████','██     ','█████  ','██     ','███████'],
+    'F':['███████','██     ','█████  ','██     ','██     '],
+    'G':[' ██████','██     ','██  ███','██   ██',' ██████'],
+    'H':['██   ██','██   ██','███████','██   ██','██   ██'],
+    'I':['███',' █ ',' █ ',' █ ','███'],
+    'J':['  ████','    ██','    ██','██  ██',' ████ '],
+    'K':['██   ██','██  ██ ','█████  ','██  ██ ','██   ██'],
+    'L':['██     ','██     ','██     ','██     ','███████'],
+    'M':['███   ███','████ ████','██ ███ ██','██     ██','██     ██'],
+    'N':['███    ██','████   ██','██ ██  ██','██  ██ ██','██   ████'],
+    'O':[' █████ ','██   ██','██   ██','██   ██',' █████ '],
+    'P':['██████ ','██   ██','██████ ','██     ','██     '],
+    'Q':[' █████ ','██   ██','██   ██','██  ███',' ██████'],
+    'R':['██████ ','██   ██','██████ ','██   ██','██   ██'],
+    'S':[' ██████','██     ',' █████ ','     ██','██████ '],
+    'T':['███████','   ██  ','   ██  ','   ██  ','   ██  '],
+    'U':['██   ██','██   ██','██   ██','██   ██',' █████ '],
+    'V':['██   ██','██   ██','██   ██',' ██ ██ ','  ███  '],
+    'W':['██     ██','██     ██','██  █  ██','██ ███ ██',' ███ ███ '],
+    'X':['██   ██',' ██ ██ ','  ███  ',' ██ ██ ','██   ██'],
+    'Y':['██   ██',' ██ ██ ','  ███  ','   ██  ','   ██  '],
+    'Z':['███████','   ██  ','  ██   ',' ██    ','███████'],
+    ' ':['  ','  ','  ','  ','  ']
+  };
+  const rows = ['','','','',''];
+  for(const ch of text){
+    const g = font[ch] || font[' '];
+    for(let i = 0; i < 5; i++) rows[i] += (g[i] || '') + ' ';
+  }
+  return rows.join('\n') + '\n';
+};
+
+C.fortune = (ctx) => {
+  const f = [
+    'Hidup ini seperti Linux — kadang butuh reboot.',
+    '"Di Linux, kamu adalah root dari takdirmu sendiri."',
+    'Kesalahan bukan bug, melainkan fitur yang belum terdokumentasi.',
+    'sudo make me a sandwich.',
+    'There is no place like ~',
+    'Kernel panic bukan akhir dunia, hanya butuh reboot.',
+    'The best way to predict the future is to invent it. - Alan Kay',
+    'Simplicity is the ultimate sophistication. - da Vinci'
+  ];
+  return f[Math.floor(Math.random()*f.length)] + '\n';
+};
+
+C.sl = (ctx) => '🚂  Kereta melintas! (Ketik "ls" untuk lanjut)\n';
+
+C.yes = (ctx) => {
+  const s = ctx.args.join(' ') || 'y';
+  return Array(15).fill(s).join('\n') + '\n';
+};
+
+C.banner = C.figlet;
+
+C.lolcat = (ctx) => {
+  const colors = ['91','93','92','96','94','95'];
+  const text = ctx.stdin || ctx.args.join(' ');
+  let i = 0;
+  return text.split('').map(c => c === '\n' ? '\n' : '\x1b[' + colors[(i++)%colors.length] + 'm' + c).join('') + '\x1b[0m\n';
+};
+
+/* ---------- SQLite (jika paket diinstall) ---------- */
+C.sqlite3 = async (ctx) => {
+  const loading = document.getElementById('loading');
+  const ltxt = document.getElementById('ltxt');
+  if(loading){ loading.classList.add('on'); ltxt.textContent = 'Memuat SQLite (sql.js)...'; }
+  try{
+    if(!window.SQL){
+      await new Promise((res, rej) => {
+        const s = document.createElement('script');
+        s.src = 'https://cdn.jsdelivr.net/npm/sql.js@1.10.3/dist/sql-wasm.js';
+        s.onload = res; s.onerror = rej;
+        document.head.appendChild(s);
+      });
+      const SQL = await window.initSqlJs({
+        locateFile: f => 'https://cdn.jsdelivr.net/npm/sql.js@1.10.3/dist/' + f
+      });
+      window.SQL = SQL;
+      window.__db = new SQL.Database();
+    }
+    const sql = ctx.stdin || ctx.args.join(' ');
+    if(!sql.trim()) return '';
+    const db = window.__db;
+    const results = db.exec(sql);
+    if(!results.length) return '';
+    let out = '';
+    for(const r of results){
+      out += r.columns.join(' | ') + '\n';
+      out += r.columns.map(c => '-'.repeat(c.length)).join('-+-') + '\n';
+      for(const row of r.values) out += row.join(' | ') + '\n';
+    }
+    return out;
+  }catch(e){
+    return col('sqlite3: ' + e.message, 'red') + '\n';
+  } finally {
+    if(loading) loading.classList.remove('on');
+  }
+};
+
+/* ---------- Lua (jika paket diinstall) ---------- */
+C.lua = async (ctx) => {
+  const loading = document.getElementById('loading');
+  const ltxt = document.getElementById('ltxt');
+  if(loading){ loading.classList.add('on'); ltxt.textContent = 'Memuat Lua (Fengari)...'; }
+  try{
+    if(!window.fengari){
+      await new Promise((res, rej) => {
+        const s = document.createElement('script');
+        s.src = 'https://cdn.jsdelivr.net/npm/fengari@0.1.4/dist/fengari-web.js';
+        s.onload = res; s.onerror = rej;
+        document.head.appendChild(s);
+      });
+    }
+    const file = ctx.args.find(a => !a.startsWith('-'));
+    const code = file ? VFS.read(VFS.resolve(file, ctx.cwd)).content : (ctx.stdin || 'print("Halo dari Lua!")');
+    const out = [];
+    const orig = console.log;
+    console.log = (...a) => out.push(a.join(' '));
+    window.fengari.load(code)();
+    console.log = orig;
+    return out.join('\n') + '\n';
+  }catch(e){
+    return col('lua: ' + e.message, 'red') + '\n';
+  } finally {
+    if(loading) loading.classList.remove('on');
+  }
+};
+
+/* ---------- echo pembantu untuk redirect stderr ---------- */
+C.test = (ctx) => {
+  /* test -e file, -f, -d, -z str, -n str */
+  const flag = ctx.args[0];
+  const val = ctx.args[1];
+  if(flag === '-e') return ctx.exit = VFS.exists(VFS.resolve(val, ctx.cwd)) ? 0 : 1, '';
+  if(flag === '-f') return ctx.exit = VFS.isFile(VFS.resolve(val, ctx.cwd)) ? 0 : 1, '';
+  if(flag === '-d') return ctx.exit = VFS.isDir(VFS.resolve(val, ctx.cwd)) ? 0 : 1, '';
+  if(flag === '-z') return ctx.exit = !val ? 0 : 1, '';
+  if(flag === '-n') return ctx.exit = val ? 0 : 1, '';
+  return '';
+};
+
+/* =====================================================================
+   5. PACKAGE MANAGER
+   ===================================================================== */
+const APPS = {
+  terminal : { name:'Terminal', icon:'⌨️', desc:'Shell Linux lengkap dengan 80+ perintah sungguhan', core:true, render:renderTerminal },
+  files    : { name:'File Manager', icon:'📁', desc:'Jelajahi sistem berkas virtual', core:true, render:renderFiles },
+  store    : { name:'App Store', icon:'🛍️', desc:'Install paket WASM & tools JS', core:true, render:renderStore },
+  editor   : { name:'Text Editor', icon:'📝', desc:'Editor teks dengan penyimpanan', core:true, render:renderEditor },
+  calc     : { name:'Kalkulator', icon:'🧮', desc:'Kalkulator dasar', core:true, render:renderCalc },
+  settings : { name:'Pengaturan', icon:'⚙️', desc:'Wallpaper, warna, pengguna', core:true, render:renderSettings },
+  about    : { name:'Tentang Sistem', icon:'ℹ️', desc:'Informasi WebLinux Pro', core:true, render:renderAbout },
+  htop     : { name:'System Monitor', icon:'📊', desc:'Monitor CPU & memori', core:true, render:renderHtop },
+  cowsay   : { name:'Cowsay', icon:'🐮', desc:'Sapi yang berbicara (perintah)', core:true, render:makePh, cmd:'cowsay' },
+
+  python   : { name:'Python 3', icon:'🐍', desc:'Python 3.12 asli via Pyodide (WASM). ~12 MB saat pertama dijalankan.', real:true, render:renderPython, pkg:'python3' },
+  node     : { name:'Node REPL', icon:'🟩', desc:'JavaScript console (V8 browser)', real:true, render:renderNode, pkg:'nodejs' },
+  sqlite   : { name:'SQLite', icon:'🗄️', desc:'Database SQLite asli via sql.js (WASM)', real:true, render:makePh, pkg:'sqlite3' },
+  lua      : { name:'Lua', icon:'🌙', desc:'Lua 5.3 via Fengari (WASM)', real:true, render:makePh, pkg:'lua5.3' },
+  git      : { name:'Git', icon:'🌿', desc:'Version control (simulasi fungsional)', render:makePh, pkg:'git' },
+  nano     : { name:'Nano Editor', icon:'📖', desc:'Editor teks terminal', render:renderNano, pkg:'nano' },
+  vim      : { name:'Vim', icon:'🟢', desc:'Editor modal klasik', render:renderVim, pkg:'vim' },
+  mysql    : { name:'MySQL', icon:'🐬', desc:'Klien MySQL (terhubung ke SQLite)', render:makePh, pkg:'mysql-client' },
+  wget     : { name:'Wget', icon:'📥', desc:'Pengunduh berbasis CLI', render:makePh, pkg:'wget' },
+  curl     : { name:'cURL', icon:'🌐', desc:'Transfer data URL', render:makePh, pkg:'curl' },
+  ffmpeg   : { name:'FFmpeg', icon:'🎬', desc:'Toolkit multimedia (simulasi)', render:makePh, pkg:'ffmpeg' },
+  imagemagick: { name:'ImageMagick', icon:'🖼️', desc:'Manipulasi gambar CLI', render:makePh, pkg:'imagemagick' },
+  pandoc   : { name:'Pandoc', icon:'📚', desc:'Konversi dokumen markdown', real:true, render:makePh, pkg:'pandoc' },
+  bc       : { name:'bc', icon:'🔢', desc:'Kalkulator presisi', render:makePh, pkg:'bc' },
+  tree     : { name:'tree', icon:'🌳', desc:'Tampilan pohon direktori', render:makePh, pkg:'tree' },
+  htop2    : { name:'htop CLI', icon:'📈', desc:'Monitor proses CLI', render:makePh, pkg:'htop' },
+  neofetch : { name:'neofetch', icon:'🐧', desc:'Info sistem artistik', render:makePh, pkg:'neofetch' },
+  tmux     : { name:'tmux', icon:'🖥️', desc:'Terminal multiplexer (simulasi)', render:makePh, pkg:'tmux' },
+  zsh      : { name:'Zsh', icon:'🐚', desc:'Shell Z alternatif', render:makePh, pkg:'zsh' },
+  fish     : { name:'Fish Shell', icon:'🐟', desc:'Friendly interactive shell', render:makePh, pkg:'fish' },
+  blender  : { name:'Blender', icon:'🧊', desc:'Modeling 3D (placeholder)', render:makePh, pkg:'blender' },
+  gimp     : { name:'GIMP', icon:'🎨', desc:'Editor gambar (placeholder)', render:makePh, pkg:'gimp' },
+  inkscape : { name:'Inkscape', icon:'✒️', desc:'Grafik vektor (placeholder)', render:makePh, pkg:'inkscape' },
+  vlc      : { name:'VLC', icon:'🎞️', desc:'Pemutar media (placeholder)', render:makePh, pkg:'vlc' },
+  firefox  : { name:'Firefox', icon:'🦊', desc:'Peramban web (simulasi)', render:renderBrowser, pkg:'firefox' },
+  chromium : { name:'Chromium', icon:'🌐', desc:'Peramban web alternatif', render:renderBrowser, pkg:'chromium' }
+};
+
+window.__PKGMGR__ = {
+  async install(pkgs, ctx){
+    let out = '';
+    for(const name of pkgs){
+      const id = Object.keys(APPS).find(k => (APPS[k].pkg || k).toLowerCase() === name.toLowerCase() || k.toLowerCase() === name.toLowerCase());
+      if(!id){
+        out += col('E: Tidak dapat menemukan paket \'' + name + '\'', 'red') + '\n';
+        continue;
+      }
+      const app = APPS[id];
+      if(window.__STATE__.installed.includes(id)){
+        out += (app.pkg || id) + ' sudah versi terbaru.\n';
+        continue;
+      }
+      out += 'Membaca daftar paket... Selesai\n';
+      out += 'Membangun pohon dependensi... Selesai\n';
+      out += 'Paket berikut akan DIPASANG:\n  ' + (app.pkg || id) + '\n';
+      out += '0 diperbarui, 1 baru dipasang, 0 dihapus.\n';
+      out += 'Get:1 http://repo.weblinux.org stable/main aarch64 ' + (app.pkg||id) + ' aarch64 [48.2 kB]\n';
+      out += 'Mengunduh... Selesai\n';
+      window.__STATE__.installed.push(id);
+      saveState();
+      renderIcons();
+      renderStart('');
+      out += 'Mengatur ' + (app.pkg||id) + ' ...\n';
+      out += col('✔ ' + app.name + ' berhasil diinstal!', 'bgreen') + '\n';
+    }
+    return out;
+  },
+  async remove(pkgs, ctx){
+    let out = '';
+    for(const name of pkgs){
+      const id = Object.keys(APPS).find(k => (APPS[k].pkg || k).toLowerCase() === name.toLowerCase() || k.toLowerCase() === name.toLowerCase());
+      if(!id) { out += col('E: Tidak dapat menemukan paket \'' + name + '\'', 'red') + '\n'; continue; }
+      const app = APPS[id];
+      if(app.core){ out += col('E: Tidak dapat menghapus paket sistem \'' + name + '\'', 'red') + '\n'; continue; }
+      if(!window.__STATE__.installed.includes(id)){ out += 'Paket \'' + name + '\' tidak terpasang.\n'; continue; }
+      window.__STATE__.installed = window.__STATE__.installed.filter(x => x !== id);
+      saveState();
+      renderIcons();
+      renderStart('');
+      if(openWins.has(id)) closeWin(openWins.get(id));
+      out += col('✔ ' + app.name + ' dihapus.', 'bgreen') + '\n';
+    }
+    return out;
+  },
+  listInstalled(){
+    let out = 'Terinstal:\n';
+    window.__STATE__.installed.forEach(id => {
+      const a = APPS[id];
+      if(a) out += (a.pkg || id).padEnd(16,' ') + ' ' + a.name + '\n';
+    });
+    return out;
+  },
+  listAvailable(){
+    let out = 'Tersedia:\n';
+    Object.keys(APPS).forEach(id => {
+      const a = APPS[id];
+      out += (a.pkg || id).padEnd(16,' ') + ' ' + a.name + '\n';
+    });
+    return out;
+  },
+  search(q){
+    if(!q) return 'Gunakan: apt search <kata-kunci>\n';
+    let out = 'Hasil untuk "' + q + '":\n';
+    Object.keys(APPS).forEach(id => {
+      const a = APPS[id];
+      if((a.pkg||id).includes(q.toLowerCase()) || a.name.toLowerCase().includes(q.toLowerCase())){
+        const inst = window.__STATE__.installed.includes(id) ? ' [terinstal]' : '';
+        out += (a.pkg||id).padEnd(16,' ') + ' - ' + a.name + inst + '\n';
+      }
+    });
+    return out;
+  },
+  show(pkg){
+    const id = Object.keys(APPS).find(k => (APPS[k].pkg||k) === pkg);
+    if(!id) return 'Tidak ada paket bernama ' + pkg + '\n';
+    const a = APPS[id];
+    return 'Paket: ' + (a.pkg||id) + '\nVersi: 1.0.0-weblinux\nArsitektur: aarch64\nDeskripsi: ' + a.desc + '\n';
+  }
+};
+
+/* =====================================================================
+   6. STATE & TEMA
+   ===================================================================== */
+const LS = {
+  get(k, d){ try{ const v = localStorage.getItem('wlinux_' + k); return v ? JSON.parse(v) : d; }catch(e){ return d; } },
+  set(k, v){ try{ localStorage.setItem('wlinux_' + k, JSON.stringify(v)); }catch(e){} }
+};
+
+const WALLS = {
+  aurora : 'linear-gradient(135deg,#0f2027,#203a43,#2c5364)',
+  dark   : 'linear-gradient(135deg,#0b1020,#151a2e,#1f2740)',
+  ubuntu : 'linear-gradient(135deg,#2c001e,#77216f,#e95420)',
+  mint   : 'linear-gradient(135deg,#0b3d2e,#1f7a4d,#8ee6a1)',
+  sunset : 'linear-gradient(135deg,#ff6e7f,#bfe9ff)',
+  ocean  : 'radial-gradient(circle at 30% 20%,#1e3c72,#2a5298,#0b1020)',
+  matrix : 'linear-gradient(135deg,#000 0%,#0f3d0f 100%)',
+  nord   : 'linear-gradient(135deg,#2e3440,#4c566a,#88c0d0)'
+};
+const ACCENTS = ['#4f8cff','#22c55e','#f59e0b','#ef4444','#a855f7','#06b6d4','#ec4899','#14b8a6'];
+
+window.__STATE__ = {
+  installed : LS.get('installed', Object.keys(APPS).filter(k => APPS[k].core)),
+  wall      : LS.get('wall','aurora'),
+  accent    : LS.get('accent','#4f8cff'),
+  user      : LS.get('user','user'),
+  notes     : LS.get('notes',{})
+};
+
+function saveState(){
+  LS.set('installed', window.__STATE__.installed);
+  LS.set('wall', window.__STATE__.wall);
+  LS.set('accent', window.__STATE__.accent);
+  LS.set('user', window.__STATE__.user);
+  LS.set('notes', window.__STATE__.notes);
+}
+function applyTheme(){
+  document.documentElement.style.setProperty('--accent', window.__STATE__.accent);
+  document.getElementById('wall').style.background = WALLS[window.__STATE__.wall] || WALLS.aurora;
+  document.getElementById('smUser').textContent = window.__STATE__.user;
+  document.getElementById('smAvatar').textContent = (window.__STATE__.user[0]||'U').toUpperCase();
+  document.getElementById('smHost').textContent = window.__STATE__.user + '@weblinux';
+  window.__WU = window.__STATE__.user;
+}
+
+/* =====================================================================
+   7. DESKTOP ICONS
+   ===================================================================== */
+function renderIcons(){
+  const box = document.getElementById('icons');
+  box.innerHTML = '';
+  window.__STATE__.installed.forEach(id => {
+    const app = APPS[id];
+    if(!app) return;
+    const d = document.createElement('div');
+    d.className = 'dicon';
+    d.innerHTML = '<div class="di">' + app.icon + '</div><div class="dn">' + app.name + '</div>';
+    d.addEventListener('click', () => openApp(id));
+    box.appendChild(d);
+  });
+}
+
+/* =====================================================================
+   8. WINDOW MANAGER
+   ===================================================================== */
+const winsEl = document.getElementById('wins');
+const openWins = new Map();
+let zTop = 100, cascade = 0;
+
+function openApp(id){
+  const app = APPS[id];
+  if(!app) return;
+  if(!window.__STATE__.installed.includes(id)){
+    toast('⚠️ ' + app.name + ' belum terinstal. Buka App Store.', 'err');
+    closeStart();
+    return;
+  }
+  if(openWins.has(id)){
+    const w = openWins.get(id);
+    w.el.classList.remove('min');
+    focusWin(w);
+    closeStart();
+    renderTasks();
+    return;
+  }
+  const W = Math.min(window.innerWidth - 10, 780);
+  const H = Math.min(window.innerHeight - 130, 600);
+  const off = (cascade++ % 6) * 12;
+  const el = document.createElement('div');
+  el.className = 'win';
+  el.style.width  = W + 'px';
+  el.style.height = H + 'px';
+  el.style.left   = Math.max(5, (window.innerWidth - W)/2 - 20 + off) + 'px';
+  el.style.top    = Math.max(5, 20 + off) + 'px';
+  el.style.zIndex = ++zTop;
+
+  el.innerHTML =
+    '<div class="win-head">' +
+      '<div class="win-title"><span>' + app.icon + '</span><span>' + app.name + '</span></div>' +
+      '<div class="win-btns">' +
+        '<button class="wb min">–</button>' +
+        '<button class="wb max">▢</button>' +
+        '<button class="wb close">✕</button>' +
+      '</div>' +
+    '</div>' +
+    '<div class="win-body"></div>';
+
+  winsEl.appendChild(el);
+  const win = { id, app, el, body: el.querySelector('.win-body'), max:false };
+
+  el.querySelector('.min').addEventListener('click', e => { e.stopPropagation(); el.classList.add('min'); renderTasks(); });
+  el.querySelector('.max').addEventListener('click', e => { e.stopPropagation(); toggleMax(win); });
+  el.querySelector('.close').addEventListener('click', e => { e.stopPropagation(); closeWin(win); });
+
+  const head = el.querySelector('.win-head');
+  head.addEventListener('pointerdown', e => {
+    if(e.target.closest('.wb')) return;
+    focusWin(win);
+    if(win.max) return;
+    const r = el.getBoundingClientRect();
+    const sx = e.clientX, sy = e.clientY, ox = r.left, oy = r.top;
+    const move = ev => {
+      el.style.left = Math.max(-W + 80, Math.min(window.innerWidth - 60, ox + ev.clientX - sx)) + 'px';
+      el.style.top  = Math.max(0, Math.min(window.innerHeight - 100, oy + ev.clientY - sy)) + 'px';
+    };
+    const up = () => {
+      document.removeEventListener('pointermove', move);
+      document.removeEventListener('pointerup', up);
+      document.removeEventListener('pointercancel', up);
+    };
+    document.addEventListener('pointermove', move);
+    document.addEventListener('pointerup', up);
+    document.addEventListener('pointercancel', up);
+    e.preventDefault();
+  });
+  el.addEventListener('pointerdown', () => focusWin(win));
+
+  openWins.set(id, win);
+  focusWin(win);
+  renderTasks();
+  closeStart();
+
+  try{ app.render(win); }
+  catch(err){
+    win.body.innerHTML = '<div class="ph"><div class="phi">💥</div><h2>Gagal memuat</h2><p>' + err.message + '</p></div>';
+  }
+}
+
+function focusWin(win){
+  win.el.style.zIndex = ++zTop;
+  document.querySelectorAll('.tk').forEach(t => t.classList.remove('on'));
+  const tk = document.querySelector('.tk[data-id="' + win.id + '"]');
+  if(tk) tk.classList.add('on');
+}
+function closeWin(win){
+  win.el.style.animation = 'pop .12s reverse';
+  setTimeout(() => {
+    win.el.remove();
+    openWins.delete(win.id);
+    renderTasks();
+  }, 110);
+}
+function toggleMax(win){
+  if(!win.max){
+    win._rect = { l:win.el.style.left, t:win.el.style.top, w:win.el.style.width, h:win.el.style.height };
+    win.el.classList.add('max');
+    win.el.style.left = '0px';
+    win.el.style.top = '0px';
+    win.el.style.width = window.innerWidth + 'px';
+    win.el.style.height = (window.innerHeight - 56) + 'px';
+    win.max = true;
+  } else {
+    win.el.classList.remove('max');
+    const r = win._rect || {};
+    win.el.style.left = r.l || '20px';
+    win.el.style.top = r.t || '30px';
+    win.el.style.width = r.w || '320px';
+    win.el.style.height = r.h || '400px';
+    win.max = false;
+  }
+}
+function renderTasks(){
+  const box = document.getElementById('tasks');
+  box.innerHTML = '';
+  openWins.forEach(w => {
+    const b = document.createElement('button');
+    b.className = 'tk' + (w.el.classList.contains('min') ? '' : ' on');
+    b.dataset.id = w.id;
+    b.innerHTML = '<span>' + w.app.icon + '</span><span>' + w.app.name + '</span>';
+    b.addEventListener('click', () => {
+      if(w.el.classList.contains('min')){ w.el.classList.remove('min'); focusWin(w); }
+      else { w.el.classList.add('min'); b.classList.remove('on'); }
+      renderTasks();
+    });
+    box.appendChild(b);
+  });
+}
+
+/* =====================================================================
+   9. START MENU
+   ===================================================================== */
+function renderStart(filter){
+  const box = document.getElementById('smList');
+  box.innerHTML = '';
+  const f = (filter||'').toLowerCase();
+  Object.keys(APPS).forEach(id => {
+    const app = APPS[id];
+    if(!window.__STATE__.installed.includes(id)) return;
+    if(f && !app.name.toLowerCase().includes(f)) return;
+    const d = document.createElement('div');
+    d.className = 'sm-app';
+    d.innerHTML = '<div class="si">' + app.icon + '</div><div>' + app.name + '</div>';
+    d.addEventListener('click', () => openApp(id));
+    box.appendChild(d);
+  });
+  if(!box.children.length){
+    box.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:var(--muted);font-size:12px;padding:20px">Tidak ada aplikasi</div>';
+  }
+}
+function openStart(){
+  document.getElementById('startMenu').classList.add('on');
+  document.getElementById('startBtn').classList.add('on');
+  document.getElementById('smSearch').value = '';
+  renderStart('');
+}
+function closeStart(){
+  document.getElementById('startMenu').classList.remove('on');
+  document.getElementById('startBtn').classList.remove('on');
+}
+function toggleStart(){
+  document.getElementById('startMenu').classList.contains('on') ? closeStart() : openStart();
+}
+
+/* =====================================================================
+   10. TOAST
+   ===================================================================== */
+function toast(msg, type){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'on' + (type ? ' ' + type : '');
+  clearTimeout(t._tm);
+  t._tm = setTimeout(() => t.classList.remove('on'), 2200);
+}
+
+/* =====================================================================
+   11. APLIKASI — Terminal
+   ===================================================================== */
+function renderTerminal(win){
+  win.body.innerHTML =
+    '<div class="term-wrap">' +
+      '<div class="term-toolbar">' +
+        '<button data-insert="help">help</button>' +
+        '<button data-insert="ls -la">ls -la</button>' +
+        '<button data-insert="neofetch">neofetch</button>' +
+        '<button data-insert="python3">python3</button>' +
+        '<button data-insert="apt list --installed">apt list</button>' +
+        '<button data-insert="cat selamat-datang.txt">cat welcome</button>' +
+        '<button data-clear="1">clear</button>' +
+      '</div>' +
+      '<div class="term-scroll"><div class="term-out"></div>' +
+        '<div class="term-line">' +
+          '<span class="term-prompt"></span>' +
+          '<input class="term-in" autocomplete="off" autocapitalize="off" spellcheck="false">' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+
+  const scroll = win.body.querySelector('.term-scroll');
+  const out    = win.body.querySelector('.term-out');
+  const inp    = win.body.querySelector('.term-in');
+  const prompt = win.body.querySelector('.term-prompt');
+
+  const shell = new Shell({ clear: () => { out.innerHTML = ''; } });
+  const history = shell.history;
+  let hIdx = 0;
+
+  function refreshPrompt(){
+    prompt.innerHTML = ansiToHtml(shell.prompt());
+  }
+
+  function print(text){
+    const d = document.createElement('div');
+    d.className = 'term-out';
+    d.innerHTML = ansiToHtml(text);
+    out.appendChild(d);
+    scroll.scrollTop = scroll.scrollHeight;
+  }
+
+  refreshPrompt();
+  print('\x1b[1;36m╔══════════════════════════════════════════════════════╗\x1b[0m');
+  print('\x1b[1;36m║          WEBLINUX PRO — Terminal v2.0                ║\x1b[0m');
+  print('\x1b[1;36m╚══════════════════════════════════════════════════════╝\x1b[0m');
+  print('');
+  print('\x1b[1;33mKetik \x1b[1;32mhelp\x1b[1;33m untuk melihat perintah. Ketik \x1b[1;32mpython3\x1b[1;33m untuk Python asli.\x1b[0m');
+  print('');
+
+  async function submit(cmd){
+    const c = cmd.trim();
+    if(c){
+      history.push(c);
+      hIdx = history.length;
+    }
+    print(shell.prompt() + c);
+    if(!c) return;
+    const tmpWin = { body: document.createElement('div') };
+    try{
+      /* Execute with capture, then print */
+      const captured = { text: '' };
+      const origExec = shell.executeInternal.bind(shell);
+      /* Redirect output to us */
+      const capture = { write: s => { captured.text += s; } };
+      await shell.executeInternal(c, { capture });
+      if(captured.text) print(captured.text);
+    }catch(e){
+      print('\x1b[31m' + e.message + '\x1b[0m');
+    }
+    refreshPrompt();
+  }
+
+  inp.addEventListener('keydown', e => {
+    if(e.key === 'Enter'){
+      const v = inp.value;
+      inp.value = '';
+      submit(v);
+      e.preventDefault();
+    } else if(e.key === 'ArrowUp'){
+      if(hIdx > 0){ hIdx--; inp.value = history[hIdx] || ''; }
+      e.preventDefault();
+    } else if(e.key === 'ArrowDown'){
+      if(hIdx < history.length - 1){ hIdx++; inp.value = history[hIdx] || ''; }
+      else { hIdx = history.length; inp.value = ''; }
+      e.preventDefault();
+    } else if(e.key === 'Tab'){
+      e.preventDefault();
+      const v = inp.value;
+      const parts = v.split(/\s+/);
+      const last = parts[parts.length - 1] || '';
+      const cmds = Object.keys(C).filter(k => k.startsWith(last));
+      if(cmds.length === 1){
+        parts[parts.length - 1] = cmds[0];
+        inp.value = parts.join(' ');
+      } else if(cmds.length > 1){
+        print(cmds.join('   '));
+      } else {
+        /* file completion */
+        const dir = last.includes('/') ? last.slice(0, last.lastIndexOf('/')+1) : '';
+        const base = last.slice(last.lastIndexOf('/')+1);
+        const absDir = VFS.resolve(dir || '.', shell.cwd);
+        if(VFS.isDir(absDir)){
+          const entries = Object.keys(VFS.get(absDir).c).filter(n => n.startsWith(base));
+          if(entries.length === 1){
+            parts[parts.length - 1] = dir + entries[0];
+            inp.value = parts.join(' ');
+          } else if(entries.length > 1){
+            print(entries.join('   '));
+          }
+        }
+      }
+    } else if(e.key === 'l' && e.ctrlKey){
+      out.innerHTML = '';
+      refreshPrompt();
+      e.preventDefault();
+    } else if(e.key === 'c' && e.ctrlKey){
+      inp.value = '';
+      print('^C');
+      refreshPrompt();
+      e.preventDefault();
+    }
+  });
+
+  win.body.querySelector('.term-scroll').addEventListener('click', () => inp.focus());
+  win.body.querySelectorAll('.term-toolbar button').forEach(b => {
+    b.addEventListener('click', () => {
+      if(b.dataset.clear){ out.innerHTML = ''; refreshPrompt(); return; }
+      inp.value = b.dataset.insert || '';
+      inp.focus();
+    });
+  });
+
+  setTimeout(() => inp.focus(), 300);
+}
+
+/* =====================================================================
+   12. APLIKASI — File Manager
+   ===================================================================== */
+function renderFiles(win){
+  let path = '/home/' + window.__STATE__.user;
+  win.body.innerHTML =
+    '<div class="fm">' +
+      '<div class="fm-toolbar">' +
+        '<button class="fm-btn" data-act="up">⬆</button>' +
+        '<button class="fm-btn" data-act="home">🏠</button>' +
+        '<div class="fm-path"></div>' +
+        '<button class="fm-btn" data-act="refresh">🔄</button>' +
+      '</div>' +
+      '<div class="fm-list"></div>' +
+    '</div>';
+  const pEl = win.body.querySelector('.fm-path');
+  const lEl = win.body.querySelector('.fm-list');
+
+  function draw(){
+    pEl.textContent = path;
+    lEl.innerHTML = '';
+    const entries = VFS.list(path);
+    if(entries.err){ lEl.innerHTML = '<div class="fm-empty">Tidak dapat membuka direktori</div>'; return; }
+    const list = entries.entries.sort((a, b) => {
+      if(a.t !== b.t) return a.t === 'd' ? -1 : 1;
+      return a.n.localeCompare(b.n);
+    });
+    if(path !== '/'){
+      const up = document.createElement('div');
+      up.className = 'fm-item';
+      up.innerHTML = '<span class="fi">↩️</span><span class="fn">..</span>';
+      up.addEventListener('click', () => { path = VFS.parent(path); draw(); });
+      lEl.appendChild(up);
+    }
+    if(!list.length){
+      const d = document.createElement('div');
+      d.className = 'fm-empty';
+      d.textContent = 'Folder kosong';
+      lEl.appendChild(d);
+      return;
+    }
+    list.forEach(item => {
+      const d = document.createElement('div');
+      d.className = 'fm-item';
+      const icon = item.t === 'd' ? '📁' : guessIcon(item.n);
+      d.innerHTML = '<span class="fi">' + icon + '</span><span class="fn">' + item.n + '</span>' +
+                    '<span class="fm">' + (item.t === 'd' ? 'DIR' : humanSize(item.c.length)) + '</span>';
+      d.addEventListener('click', () => {
+        if(item.t === 'd'){ path = (path === '/' ? '' : path) + '/' + item.n; draw(); }
+        else {
+          state.notes['__open'] = { path:(path === '/' ? '' : path) + '/' + item.n, content:item.c };
+          openApp('editor');
+          setTimeout(() => {
+            const w = openWins.get('editor');
+            if(w && w._loadFile) w._loadFile((path === '/' ? '' : path) + '/' + item.n, item.c);
+          }, 200);
+        }
+      });
+      lEl.appendChild(d);
+    });
+  }
+  function guessIcon(name){
+    if(/\.(py)$/i.test(name)) return '🐍';
+    if(/\.(js|ts)$/i.test(name)) return '📜';
+    if(/\.(json)$/i.test(name)) return '🧾';
+    if(/\.(md|txt)$/i.test(name)) return '📄';
+    if(/\.(sh|bash)$/i.test(name)) return '🐚';
+    if(/\.(html|htm)$/i.test(name)) return '🌐';
+    if(/\.(css)$/i.test(name)) return '🎨';
+    if(/\.(jpg|png|gif|webp)$/i.test(name)) return '🖼️';
+    return '📄';
+  }
+  win.body.querySelector('[data-act="up"]').addEventListener('click', () => { if(path !== '/'){ path = VFS.parent(path); draw(); } });
+  win.body.querySelector('[data-act="home"]').addEventListener('click', () => { path = '/home/' + window.__STATE__.user; draw(); });
+  win.body.querySelector('[data-act="refresh"]').addEventListener('click', draw);
+  draw();
+}
+
+/* =====================================================================
+   13. APLIKASI — Text Editor
+   ===================================================================== */
+function renderEditor(win){
+  win.body.innerHTML =
+    '<div class="editor">' +
+      '<div class="editor-bar">' +
+        '<input class="ed-name" placeholder="/path/file.txt">' +
+        '<button class="btn" data-act="save">💾 Simpan</button>' +
+      '</div>' +
+      '<textarea class="editor-area" placeholder="Tulis sesuatu..."></textarea>' +
+    '</div>';
+  const nameEl = win.body.querySelector('.ed-name');
+  const area   = win.body.querySelector('.editor-area');
+
+  win._loadFile = (path, content) => {
+    nameEl.value = path;
+    area.value = content;
+  };
+
+  const last = state.notes['__last'];
+  if(last){ nameEl.value = last; area.value = state.notes[last] || ''; }
+
+  win.body.querySelector('[data-act="save"]').addEventListener('click', () => {
+    const p = nameEl.value.trim();
+    if(!p){ toast('⚠️ Tentukan path berkas', 'err'); return; }
+    const abs = VFS.resolve(p, '/home/' + window.__STATE__.user);
+    const r = VFS.write(abs, area.value);
+    if(r.err){ toast('❌ Gagal menyimpan: ' + r.err, 'err'); return; }
+    state.notes[p] = area.value;
+    state.notes['__last'] = p;
+    saveState();
+    toast('💾 Tersimpan: ' + p, 'ok');
+    renderIcons();
+  });
+}
+
+/* =====================================================================
+   14. APLIKASI — Calculator
+   ===================================================================== */
+function renderCalc(win){
+  win.body.innerHTML = '<div class="calc"><div class="calc-disp">0</div><div class="calc-grid"></div></div>';
+  const disp = win.body.querySelector('.calc-disp');
+  const grid = win.body.querySelector('.calc-grid');
+  const keys = [
+    ['C','fn'],['⌫','fn'],['%','op'],['÷','op'],
+    ['7',''],['8',''],['9',''],['×','op'],
+    ['4',''],['5',''],['6',''],['−','op'],
+    ['1',''],['2',''],['3',''],['+','op'],
+    ['±',''],['0',''],['.',''],['=','eq']
+  ];
+  let cur = '0', prev = null, op = null, reset = false;
+  function upd(){ disp.textContent = cur.length > 12 ? Number(cur).toExponential(6) : cur; }
+  function calc(a, b, o){
+    a = parseFloat(a); b = parseFloat(b);
+    if(o === '+') return a + b;
+    if(o === '−') return a - b;
+    if(o === '×') return a * b;
+    if(o === '÷') return b === 0 ? NaN : a / b;
+    if(o === '%') return a % b;
+    return b;
+  }
+  keys.forEach(([k, cls]) => {
+    const b = document.createElement('button');
+    b.textContent = k;
+    if(cls) b.className = cls;
+    b.addEventListener('click', () => {
+      if(k >= '0' && k <= '9'){ if(reset || cur === '0'){ cur = k; reset = false; } else cur += k; }
+      else if(k === '.'){ if(reset){ cur = '0.'; reset = false; } else if(!cur.includes('.')) cur += '.'; }
+      else if(k === 'C'){ cur = '0'; prev = null; op = null; reset = false; }
+      else if(k === '⌫'){ cur = cur.length > 1 ? cur.slice(0,-1) : '0'; }
+      else if(k === '±'){ cur = cur.startsWith('-') ? cur.slice(1) : '-' + cur; }
+      else if(k === '='){
+        if(op && prev !== null){
+          const r = calc(prev, cur, op);
+          cur = isNaN(r) ? 'Error' : String(Math.round(r * 1e10) / 1e10);
+          prev = null; op = null; reset = true;
+        }
+      } else {
+        if(op && prev !== null && !reset){
+          const r = calc(prev, cur, op);
+          cur = isNaN(r) ? 'Error' : String(Math.round(r * 1e10) / 1e10);
+        }
+        prev = cur; op = k; reset = true;
+      }
+      upd();
+    });
+    grid.appendChild(b);
+  });
+  upd();
+}
+
+/* =====================================================================
+   15. APLIKASI — App Store
+   ===================================================================== */
+function renderStore(win){
+  win.body.innerHTML = '<div class="store"></div>';
+  const box = win.body.querySelector('.store');
+  function draw(){
+    box.innerHTML = '';
+    const head = document.createElement('div');
+    head.className = 'store-head';
+    const realCount = Object.keys(APPS).filter(k => APPS[k].real).length;
+    head.textContent = '📦 ' + window.__STATE__.installed.length + ' terinstal  ·  ' +
+                      realCount + ' paket asli (WASM)  ·  ' +
+                      Object.keys(APPS).length + ' total';
+    box.appendChild(head);
+
+    Object.keys(APPS).forEach(id => {
+      const app = APPS[id];
+      if(app.core) return;
+      const installed = window.__STATE__.installed.includes(id);
+      const d = document.createElement('div');
+      d.className = 'pkg';
+      d.innerHTML =
+        '<div class="pi">' + app.icon + '</div>' +
+        '<div class="pinfo">' +
+          '<div class="pn">' + app.name +
+            (app.real ? '<span class="pbadge real">REAL WASM</span>' : '') +
+          '</div>' +
+          '<div class="pd">' + app.desc + '</div>' +
+          (app.pkg ? '<div class="ptag">paket: ' + app.pkg + '</div>' : '') +
+          '<div class="bar" style="display:none"><i></i></div>' +
+        '</div>';
+      const btn = document.createElement('button');
+      btn.className = 'btn ' + (installed ? 'red' : '');
+      btn.textContent = installed ? 'Hapus' : 'Install';
+      btn.addEventListener('click', () => {
+        const bar = d.querySelector('.bar');
+        const fill = d.querySelector('.bar i');
+        btn.disabled = true;
+        btn.textContent = installed ? 'Menghapus…' : 'Mengunduh…';
+        bar.style.display = 'block';
+        let p = 0;
+        const iv = setInterval(() => {
+          p += 10 + Math.random() * 20;
+          if(p >= 100) p = 100;
+          fill.style.width = p + '%';
+          if(p === 100){
+            clearInterval(iv);
+            setTimeout(() => {
+              if(installed){
+                window.__STATE__.installed = window.__STATE__.installed.filter(x => x !== id);
+                if(openWins.has(id)) closeWin(openWins.get(id));
+                toast('🗑️ ' + app.name + ' dihapus');
+              } else {
+                window.__STATE__.installed.push(id);
+                toast('✅ ' + app.name + ' berhasil diinstal!', 'ok');
+              }
+              saveState();
+              renderIcons();
+              renderStart('');
+              draw();
+            }, 300);
+          }
+        }, 140);
+      });
+      d.appendChild(btn);
+      box.appendChild(d);
+    });
+  }
+  draw();
+}
+
+/* =====================================================================
+   16. APLIKASI — Settings
+   ===================================================================== */
+function renderSettings(win){
+  win.body.innerHTML = '<div class="settings"></div>';
+  const box = win.body.querySelector('.settings');
+  function draw(){
+    box.innerHTML = '';
+
+    /* Wallpaper */
+    const s1 = document.createElement('div');
+    s1.className = 'set-sec';
+    s1.innerHTML = '<div class="set-title">WALLPAPER</div>';
+    const wg = document.createElement('div');
+    wg.className = 'walls';
+    Object.keys(WALLS).forEach(k => {
+      const w = document.createElement('div');
+      w.className = 'wall' + (state.wall === k ? ' on' : '');
+      w.style.background = WALLS[k];
+      w.addEventListener('click', () => { state.wall = k; saveState(); applyTheme(); draw(); });
+      wg.appendChild(w);
+    });
+    s1.appendChild(wg);
+    box.appendChild(s1);
+
+    /* Accent */
+    const s2 = document.createElement('div');
+    s2.className = 'set-sec';
+    s2.innerHTML = '<div class="set-title">WARNA AKSEN</div>';
+    const cg = document.createElement('div');
+    cg.className = 'colors';
+    ACCENTS.forEach(c => {
+      const el = document.createElement('div');
+      el.className = 'col' + (state.accent === c ? ' on' : '');
+      el.style.background = c;
+      el.style.color = c;
+      el.addEventListener('click', () => { state.accent = c; saveState(); applyTheme(); draw(); });
+      cg.appendChild(el);
+    });
+    s2.appendChild(cg);
+    box.appendChild(s2);
+
+    /* User */
+    const s3 = document.createElement('div');
+    s3.className = 'set-sec';
+    s3.innerHTML = '<div class="set-title">PENGGUNA</div>';
+    const row = document.createElement('div');
+    row.className = 'set-row';
+    row.innerHTML = '<span>Nama pengguna</span>';
+    const inp = document.createElement('input');
+    inp.type = 'text';
+    inp.value = state.user;
+    inp.addEventListener('change', () => {
+      const v = inp.value.trim().replace(/\s+/g,'-') || 'user';
+      state.user = v; saveState(); applyTheme();
+      toast('👤 Pengguna: ' + v, 'ok');
+    });
+    row.appendChild(inp);
+    s3.appendChild(row);
+    box.appendChild(s3);
+
+    /* System */
+    const s4 = document.createElement('div');
+    s4.className = 'set-sec';
+    s4.innerHTML = '<div class="set-title">SISTEM</div>';
+    const r1 = document.createElement('div');
+    r1.className = 'set-row';
+    r1.innerHTML = '<span>Aplikasi terinstal</span><b>' + window.__STATE__.installed.length + '</b>';
+    const r2 = document.createElement('div');
+    r2.className = 'set-row';
+    r2.innerHTML = '<span>Versi WebLinux</span><b>2.0 Pro</b>';
+    const r3 = document.createElement('div');
+    r3.className = 'set-row';
+    r3.innerHTML = '<span>Python (Pyodide)</span><b>' + (window.__pyodide ? '✓ Dimuat' : '○ Belum') + '</b>';
+    const btn1 = document.createElement('button');
+    btn1.className = 'btn gray';
+    btn1.style.padding = '11px';
+    btn1.textContent = '🧹 Bersihkan Cache Paket';
+    btn1.addEventListener('click', () => {
+      window.__pyodide = null;
+      window.__pyodideLoading = null;
+      toast('Cache paket dibersihkan', 'ok');
+      draw();
+    });
+    const btn2 = document.createElement('button');
+    btn2.className = 'btn red';
+    btn2.style.padding = '11px';
+    btn2.textContent = '🗑️ Reset Semua Data';
+    btn2.addEventListener('click', () => {
+      if(confirm('Hapus SEMUA data (berkas, aplikasi, pengaturan)?')){
+        localStorage.clear();
+        location.reload();
+      }
+    });
+    s4.appendChild(r1); s4.appendChild(r2); s4.appendChild(r3); s4.appendChild(btn1); s4.appendChild(btn2);
+    box.appendChild(s4);
+
+    /* Info */
+    const s5 = document.createElement('div');
+    s5.className = 'set-sec';
+    s5.innerHTML = '<div class="set-title">INFORMASI BROWSER</div>' +
+      '<div class="set-row"><span>CPU core</span><b>' + (navigator.hardwareConcurrency||'?') + '</b></div>' +
+      '<div class="set-row"><span>Memori</span><b>' + (navigator.deviceMemory||'?') + ' GB</b></div>' +
+      '<div class="set-row"><span>Resolusi</span><b>' + window.innerWidth + '×' + window.innerHeight + '</b></div>' +
+      '<div class="set-row"><span>Platform</span><b>' + (navigator.platform||'?') + '</b></div>';
+    box.appendChild(s5);
+  }
+  draw();
+}
+
+/* =====================================================================
+   17. APLIKASI — Tentang
+   ===================================================================== */
+function renderAbout(win){
+  win.body.innerHTML =
+    '<div class="ph">' +
+      '<div class="phi">🐧</div>' +
+      '<h2>WebLinux Pro 2.0</h2>' +
+      '<p>Lingkungan desktop Linux lengkap di peramban Android.<br>' +
+      'Shell sungguhan dengan 80+ perintah Linux yang berfungsi,<br>' +
+      'pipa, redirect, globbing, command substitution,<br>' +
+      'dan package manager dengan Python/SQLite/Lua asli via WebAssembly.</p>' +
+      '<p class="pkg-info">80+ perintah · ' + Object.keys(APPS).length + ' paket · ' + window.__STATE__.installed.length + ' terinstal</p>' +
+      '<p style="font-size:11px;color:#6b7280;margin-top:8px">Ketik <b>help</b> di Terminal untuk melihat semua perintah.</p>' +
+    '</div>';
+}
+
+/* =====================================================================
+   18. APLIKASI — Htop
+   ===================================================================== */
+function renderHtop(win){
+  win.body.innerHTML = '<div class="htop"></div>';
+  const box = win.body.querySelector('.htop');
+  const cores = Math.min(navigator.hardwareConcurrency || 4, 8);
+  const rows = [];
+  for(let i = 0; i < cores; i++){
+    const r = document.createElement('div');
+    r.className = 'row';
+    r.innerHTML = '<span class="lbl">CPU' + i + '</span><div class="b"><i style="width:0%"></i></div><span class="val">0%</span>';
+    box.appendChild(r);
+    rows.push(r);
+  }
+  const mem = document.createElement('div');
+  mem.className = 'row';
+  mem.style.marginTop = '8px';
+  mem.innerHTML = '<span class="lbl">MEM</span><div class="b"><i style="width:0%"></i></div><span class="val">0%</span>';
+  box.appendChild(mem);
+  const info = document.createElement('div');
+  info.className = 'info';
+  box.appendChild(info);
+  function upd(){
+    rows.forEach(r => {
+      const v = Math.floor(Math.random() * 65) + 8;
+      r.querySelector('i').style.width = v + '%';
+      r.querySelector('.val').textContent = v + '%';
+    });
+    const mv = Math.floor(Math.random() * 40) + 30;
+    mem.querySelector('i').style.width = mv + '%';
+    mem.querySelector('.val').textContent = mv + '%';
+    const upMin = Math.floor(performance.now()/60000);
+    info.innerHTML =
+      '<b>Uptime</b>   : ' + upMin + ' menit<br>' +
+      '<b>Proses</b>   : ' + (12 + Math.floor(Math.random()*8)) + ' berjalan<br>' +
+      '<b>Aplikasi</b> : ' + window.__STATE__.installed.length + ' terinstal<br>' +
+      '<b>Python</b>   : ' + (window.__pyodide ? 'dimuat' : 'belum dimuat') + '<br>' +
+      '<b>Resolusi</b> : ' + window.innerWidth + '×' + window.innerHeight;
+  }
+  upd();
+  const iv = setInterval(() => {
+    if(!document.body.contains(box)){ clearInterval(iv); return; }
+    upd();
+  }, 1200);
+}
+
+/* =====================================================================
+   19. APLIKASI — Python REPL
+   ===================================================================== */
+function renderPython(win){
+  win.body.innerHTML =
+    '<div class="repl">' +
+      '<div class="repl-out"></div>' +
+      '<div class="repl-line">' +
+        '<span class="repl-prompt">>>> </span>' +
+        '<textarea class="repl-in" rows="1" placeholder="Ketik kode Python..." spellcheck="false"></textarea>' +
+      '</div>' +
+    '</div>';
+  const out = win.body.querySelector('.repl-out');
+  const inp = win.body.querySelector('.repl-in');
+  const prm = win.body.querySelector('.repl-prompt');
+
+  function print(t, cls){
+    const d = document.createElement('div');
+    if(cls) d.className = cls;
+    d.textContent = t;
+    out.appendChild(d);
+    out.scrollTop = out.scrollHeight;
+  }
+
+  print('Python 3.12 (Pyodide WASM)');
+  print('Ketik kode Python. Kosongkan 2x untuk menjalankan blok.');
+  print('');
+
+  let buf = [];
+  let emptyCount = 0;
+
+  inp.addEventListener('keydown', e => {
+    if(e.key === 'Enter' && !e.shiftKey){
+      e.preventDefault();
+      const line = inp.value;
+      inp.value = '';
+      inp.style.height = '22px';
+      if(!line.trim()){
+        emptyCount++;
+        if(emptyCount >= 2 && buf.length){
+          run(buf.join('\n'));
+          buf = [];
+          emptyCount = 0;
+          prm.textContent = '>>> ';
+        } else if(!buf.length){
+          emptyCount = 0;
+        }
+        return;
+      }
+      emptyCount = 0;
+      buf.push(line);
+      prm.textContent = '... ';
+      if(!/[:\\{(]$/.test(line.trim()) && !/^\s/.test(line)){
+        run(buf.join('\n'));
+        buf = [];
+        prm.textContent = '>>> ';
+      }
+    }
+  });
+
+  inp.addEventListener('input', () => {
+    inp.style.height = 'auto';
+    inp.style.height = Math.min(inp.scrollHeight, 120) + 'px';
+  });
+
+  async function run(code){
+    print('>>> ' + code, 'ansi-dim');
+    const loading = document.getElementById('loading');
+    const ltxt = document.getElementById('ltxt');
+    const firstTime = !window.__pyodide;
+    if(loading){
+      loading.classList.add('on');
+      ltxt.textContent = firstTime ? 'Mengunduh Python 3 (sekali saja, ~12 MB)...' : 'Menjalankan...';
+    }
+    try{
+      const py = await ensurePyodide();
+      if(loading) loading.classList.remove('on');
+      let output = '';
+      py.setStdout({ batched: s => { output += s + '\n'; } });
+      py.setStderr({ batched: s => { output += s + '\n'; } });
+      try{
+        const result = await py.runPythonAsync(code);
+        if(result !== undefined && result !== null) output += String(result) + '\n';
+      }catch(e){
+        output += (e.message || String(e)) + '\n';
+      }
+      if(output) print(output);
+    }catch(e){
+      if(loading) loading.classList.remove('on');
+      print('Error memuat Python: ' + e.message);
+    }
+  }
+  setTimeout(() => inp.focus(), 200);
+}
+
+/* =====================================================================
+   20. APLIKASI — Node REPL
+   ===================================================================== */
+function renderNode(win){
+  win.body.innerHTML =
+    '<div class="repl">' +
+      '<div class="repl-out"></div>' +
+      '<div class="repl-line">' +
+        '<span class="repl-prompt">&gt; </span>' +
+        '<textarea class="repl-in" rows="1" placeholder="Ketik JavaScript..." spellcheck="false"></textarea>' +
+      '</div>' +
+    '</div>';
+  const out = win.body.querySelector('.repl-out');
+  const inp = win.body.querySelector('.repl-in');
+  function print(t){ const d = document.createElement('div'); d.textContent = t; out.appendChild(d); out.scrollTop = out.scrollHeight; }
+  print('Node.js REPL (V8 browser) v20.x');
+  print('Ketik JavaScript. console.log akan tercetak.');
+  print('');
+  inp.addEventListener('keydown', e => {
+    if(e.key === 'Enter' && !e.shiftKey){
+      e.preventDefault();
+      const code = inp.value;
+      inp.value = '';
+      if(!code.trim()) return;
+      print('> ' + code);
+      const logs = [];
+      const fakeConsole = { log:(...a) => logs.push(a.map(fmt).join(' ')), error:(...a)=>logs.push('ERR: '+a.join(' ')) };
+      function fmt(x){ try{ return typeof x === 'object' ? JSON.stringify(x) : String(x); }catch(e){ return String(x); } }
+      try{
+        const fn = new Function('console', 'return (function(){ ' + code + ' })()');
+        const r = fn(fakeConsole);
+        if(r !== undefined) logs.push('=> ' + fmt(r));
+        if(logs.length) print(logs.join('\n'));
+      }catch(e){ print('Error: ' + e.message); }
+    }
+  });
+  setTimeout(() => inp.focus(), 200);
+}
+
+/* =====================================================================
+   21. APLIKASI — Nano (mini editor)
+   ===================================================================== */
+function renderNano(win){
+  const file = win._nanoFile;
+  const content = file ? (VFS.read(VFS.resolve(file, '/home/' + window.__STATE__.user)).content || '') : '';
+  win.body.innerHTML =
+    '<div style="display:flex;flex-direction:column;height:100%;background:#0a0e1a">' +
+      '<div style="background:#1a2030;padding:6px 12px;font-family:ui-monospace,monospace;font-size:11.5px;color:#8b96b0;border-bottom:1px solid var(--border)">' +
+        ' GNU nano 7.2  ' + (file || '[File baru]') +
+      '</div>' +
+      '<textarea style="flex:1;background:#0a0e1a;color:#d4dcec;border:none;outline:none;padding:14px;resize:none;font-family:ui-monospace,monospace;font-size:13px;line-height:1.55" spellcheck="false">' + escapeHtml(content) + '</textarea>' +
+      '<div style="background:#1a2030;padding:6px 12px;font-family:ui-monospace,monospace;font-size:11px;color:#8b96b0;border-top:1px solid var(--border)">' +
+        '^O Simpan  ·  ^X Keluar' +
+      '</div>' +
+    '</div>';
+  const ta = win.body.querySelector('textarea');
+  ta.addEventListener('keydown', e => {
+    if(e.ctrlKey && e.key === 's'){ e.preventDefault(); saveNano(); }
+    if(e.ctrlKey && e.key === 'x'){ e.preventDefault(); closeWin(win); }
+  });
+  function saveNano(){
+    const target = file || prompt('Simpan sebagai:');
+    if(!target) return;
+    const abs = VFS.resolve(target, '/home/' + window.__STATE__.user);
+    VFS.write(abs, ta.value);
+    toast('💾 Tersimpan: ' + target, 'ok');
+    renderIcons();
+  }
+  setTimeout(() => ta.focus(), 200);
+}
+
+function escapeHtml(s){ return s.replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
+
+/* =====================================================================
+   22. APLIKASI — Vim (mini)
+   ===================================================================== */
+function renderVim(win){
+  const file = win._vimFile;
+  const content = file ? (VFS.read(VFS.resolve(file, '/home/' + window.__STATE__.user)).content || '') : '';
+  win.body.innerHTML =
+    '<div style="display:flex;flex-direction:column;height:100%;background:#000">' +
+      '<div style="background:#1a1a1a;padding:5px 12px;font-family:ui-monospace,monospace;font-size:11px;color:#999">' +
+        'VIM - Vi IMproved    ' + (file || '[No Name]') +
+      '</div>' +
+      '<textarea style="flex:1;background:#000;color:#ddd;border:none;outline:none;padding:14px;resize:none;font-family:ui-monospace,monospace;font-size:13px;line-height:1.55;caret-color:#0f0" spellcheck="false">' + escapeHtml(content) + '</textarea>' +
+      '<div style="background:#1a1a1a;padding:4px 12px;font-family:ui-monospace,monospace;font-size:11px;color:#0f0">' +
+        '-- INSERT --    Ketik :w untuk simpan, :q untuk keluar' +
+      '</div>' +
+    '</div>';
+  const ta = win.body.querySelector('textarea');
+  ta.addEventListener('keydown', e => {
+    if(e.ctrlKey && e.key === 's'){ e.preventDefault(); const t = file || prompt('Simpan: '); if(t){ VFS.write(VFS.resolve(t, '/home/' + window.__STATE__.user), ta.value); toast('💾 Tersimpan','ok'); } }
+  });
+  setTimeout(() => ta.focus(), 200);
+}
+
+/* =====================================================================
+   23. APLIKASI — Browser
+   ===================================================================== */
+function renderBrowser(win){
+  win.body.innerHTML =
+    '<div style="display:flex;flex-direction:column;height:100%;background:var(--panel2)">' +
+      '<div style="display:flex;gap:6px;padding:8px;border-bottom:1px solid var(--border);align-items:center">' +
+        '<input id="urlBar" placeholder="Ketik alamat situs..." style="flex:1;background:rgba(255,255,255,.07);border:1px solid var(--border);color:#fff;padding:9px 12px;border-radius:9px;font-size:12.5px;outline:none;min-width:0">' +
+        '<button class="btn" id="goBtn">→</button>' +
+      '</div>' +
+      '<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:26px;text-align:center;overflow-y:auto">' +
+        '<div style="font-size:60px">🌐</div>' +
+        '<h3 style="font-size:17px;font-weight:600">Peramban Web</h3>' +
+        '<p style="font-size:12px;color:var(--muted);max-width:320px;line-height:1.6">' +
+          'Karena keterbatasan keamanan browser (CORS/X-Frame), banyak situs tidak bisa ditampilkan langsung di dalam jendela ini. Klik salah satu pintasan untuk membukanya di tab baru.' +
+        '</p>' +
+        '<div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:6px">' +
+          '<button class="btn gray" data-u="https://wikipedia.org">📖 Wikipedia</button>' +
+          '<button class="btn gray" data-u="https://duckduckgo.com">🦆 DuckDuckGo</button>' +
+          '<button class="btn gray" data-u="https://github.com">🐙 GitHub</button>' +
+          '<button class="btn gray" data-u="https://stackoverflow.com">📚 StackOverflow</button>' +
+          '<button class="btn gray" data-u="https://python.org">🐍 Python.org</button>' +
+          '<button class="btn gray" data-u="https://kernel.org">🐧 Kernel.org</button>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  const urlBar = win.body.querySelector('#urlBar');
+  function go(u){
+    if(!u) return;
+    if(!/^https?:\/\//.test(u)) u = 'https://' + u;
+    try{ window.open(u, '_blank', 'noopener'); toast('🌐 Membuka ' + u.slice(0,40), 'ok'); }
+    catch(e){ toast('Tidak dapat membuka', 'err'); }
+  }
+  win.body.querySelector('#goBtn').addEventListener('click', () => go(urlBar.value.trim()));
+  urlBar.addEventListener('keydown', e => { if(e.key === 'Enter') go(urlBar.value.trim()); });
+  win.body.querySelectorAll('[data-u]').forEach(b => b.addEventListener('click', () => go(b.dataset.u)));
+}
+
+/* =====================================================================
+   24. PLACEHOLDER
+   ===================================================================== */
+function makePh(win){
+  const app = win.app;
+  win.body.innerHTML =
+    '<div class="ph">' +
+      '<div class="phi">' + app.icon + '</div>' +
+      '<h2>' + app.name + '</h2>' +
+      '<p>' + app.desc + '</p>' +
+      '<p class="pkg-info">paket: ' + (app.pkg || win.id) + '</p>' +
+      '<button class="btn" id="phRun" style="margin-top:6px">▶ Jalankan</button>' +
+      '<button class="btn gray" id="phRm">Hapus</button>' +
+    '</div>';
+  win.body.querySelector('#phRun').addEventListener('click', () => {
+    if(app.cmd){
+      openApp('terminal');
+      setTimeout(() => {
+        const tw = openWins.get('terminal');
+        if(tw){ const inp = tw.body.querySelector('.term-in'); if(inp){ inp.value = app.cmd + ' "Halo Linux"'; inp.focus(); } }
+      }, 300);
+    } else {
+      toast('✅ ' + app.name + ' berjalan (mode demo)', 'ok');
+    }
+  });
+  win.body.querySelector('#phRm').addEventListener('click', () => {
+    if(app.core) return;
+    if(confirm('Hapus ' + app.name + '?')){
+      window.__STATE__.installed = window.__STATE__.installed.filter(x => x !== win.id);
+      saveState();
+      renderIcons();
+      renderStart('');
+      closeWin(win);
+      toast('🗑️ ' + app.name + ' dihapus');
+    }
+  });
+}
+
+/* =====================================================================
+   25. EVENT & INIT
+   ===================================================================== */
+document.getElementById('startBtn').addEventListener('click', toggleStart);
+document.getElementById('smSearch').addEventListener('input', e => renderStart(e.target.value));
+document.getElementById('smLock').addEventListener('click', () => { closeStart(); toast('🔒 Layar dikunci (demo)'); });
+document.getElementById('smPower').addEventListener('click', () => {
+  closeStart();
+  if(confirm('Matikan WebLinux Pro?')){
+    document.getElementById('boot').style.display = 'flex';
+    document.getElementById('boot').classList.remove('hide');
+    setTimeout(() => location.reload(), 800);
+  }
+});
+document.getElementById('desktop').addEventListener('pointerdown', e => {
+  if(!e.target.closest('#startMenu') && !e.target.closest('#startBtn')) closeStart();
+});
+
+const HARI = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+const BULAN = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+function tick(){
+  const d = new Date();
+  document.getElementById('time').textContent = String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+  document.getElementById('date').textContent = HARI[d.getDay()] + ', ' + d.getDate() + ' ' + BULAN[d.getMonth()];
+}
+setInterval(tick, 1000); tick();
+
+/* Back button */
+history.pushState({}, '');
+window.addEventListener('popstate', () => {
+  if(document.getElementById('startMenu').classList.contains('on')) closeStart();
+  else if(openWins.size){ const last = Array.from(openWins.values()).pop(); closeWin(last); }
+  history.pushState({}, '');
+});
+
+/* Boot */
+const bootLines = [
+  'Menginisialisasi kernel virtual...',
+  'Memuat modul WASM...',
+  'Memasang sistem berkas...',
+  'Menjalankan init...',
+  'Mempersiapkan shell...',
+  'Siap!'
+];
+let bootIdx = 0;
+const bootInterval = setInterval(() => {
+  bootIdx++;
+  if(bootIdx < bootLines.length){
+    document.getElementById('bootTxt').textContent = bootLines[bootIdx];
+  }
+}, 350);
+
+setTimeout(() => {
+  clearInterval(bootInterval);
+  document.getElementById('boot').classList.add('hide');
+  setTimeout(() => { document.getElementById('boot').style.display = 'none'; }, 600);
+  document.getElementById('desktop').classList.add('on');
+  applyTheme();
+  renderIcons();
+  renderStart('');
+  renderTasks();
+  setTimeout(() => toast('👋 Selamat datang di WebLinux Pro! Ketuk ⊞ untuk mulai.', 'ok'), 600);
+  setTimeout(() => toast('💡 Buka Terminal → ketik "help" atau "python3"', 'ok'), 2800);
+}, 2200);
+</script>
+</body>
+</html>
